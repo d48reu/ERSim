@@ -56,7 +56,16 @@
   border-radius: 4px;
   padding: 8px 10px;
   background: var(--bg);
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.bay-clickable {
+  cursor: pointer;
+}
+
+.bay-clickable:hover {
+  border-color: var(--accent);
+  background: #1a0f22;
 }
 
 .bay-card.bay-active {

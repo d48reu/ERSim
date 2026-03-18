@@ -61,7 +61,12 @@ export default function App() {
         {bays.length > 0 ? (
           <div className="bay-list">
             {bays.map(bay => (
-              <div key={bay.id} className={`bay-card ${bay.active ? 'bay-active' : ''} ${bay.urgent ? 'bay-urgent' : ''}`}>
+              <div
+                key={bay.id}
+                className={`bay-card bay-clickable ${bay.active ? 'bay-active' : ''} ${bay.urgent ? 'bay-urgent' : ''}`}
+                onClick={() => submit(`go ${bay.id.replace('Bay ', '')}`)}
+                title={`Go to ${bay.id}`}
+              >
                 <div className="bay-top">
                   <span className="bay-id">{bay.id}</span>
                   <span className={`bay-acuity acuity-${bay.acuity}`}>[{bay.acuity}]</span>
@@ -79,7 +84,12 @@ export default function App() {
         ) : sessionData ? (
           <div className="bay-list">
             {sessionData.bays.map(b => (
-              <div key={b.bay_id} className="bay-card">
+              <div
+                key={b.bay_id}
+                className="bay-card bay-clickable"
+                onClick={() => submit(`go ${b.bay_id}`)}
+                title={`Go to Bay ${b.bay_id}`}
+              >
                 <div className="bay-top">
                   <span className="bay-id">{b.bay_id}</span>
                   <span className={`bay-acuity acuity-${b.acuity}`}>[{b.acuity}]</span>
