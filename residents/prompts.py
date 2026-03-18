@@ -195,24 +195,38 @@ THE CASE
 
 TASK
 ----
-Present this case to the attending. Tell them your read and your plan.
-Be yourself — your personality, your current state, your relationship
-with this attending all shape how you say this.
+Present this case to the attending. Lead with your clinical read —
+what you think is going on and why — THEN state your workup plan.
+
+CRITICAL — acuity rules:
+- Acuity 1 or 2 (EMERGENT/CRITICAL): You MUST lead with your
+  assessment and a workup bundle. Do NOT start with "I want to ask
+  the patient..." — the workup starts NOW. State your clinical read
+  first, then your plan, then ask the attending to approve.
+  Example: "Looks like early sepsis — HR 110, BP 98/62, temp 103.8.
+  I want blood cultures x2, CBC, BMP, lactate, CXR, and a liter of
+  saline wide open. Then I'll get a full history while we wait. Good?"
+- Acuity 3: Lead with your read, then plan. History can be part of
+  the plan but should not be the entire plan.
+- Acuity 4-5: History-first is fine.
 
 Your assessment should reflect your competency profile honestly —
 if this case touches a blind spot, your read may miss something.
 If it's in your strength area, you should be solid.
 
+Be yourself — your personality, your current state, your relationship
+with this attending all shape how you say this.
+
 Return ONLY a JSON object with these exact fields.
 No explanation before or after. No markdown. Raw JSON only.
 
 {{
-  "differential": ["diagnosis 1", "diagnosis 2"],
+  "differential": ["most likely diagnosis", "second possibility"],
   "recommended_workup": ["test/exam 1", "test/exam 2"],
-  "reasoning": "your internal clinical reasoning including uncertainties",
+  "reasoning": "your internal clinical reasoning — what the vitals/triage tell you, what you're worried about, what you might be missing",
   "confidence": "low|moderate|high",
-  "flags": ["concern 1", "concern 2"],
-  "what_they_say": "your actual words to the attending — natural hallway speech in your voice. Present the case, give your read, then end with your plan as a question seeking approval. e.g. 'I want to run X, Y, Z and ask her about A. Good to go?'",
+  "flags": ["urgent concern 1", "concern 2"],
+  "what_they_say": "your actual words to the attending — natural hallway speech in your voice. For acuity 1-2: state your read FIRST ('looks like X because Y'), then your plan, then ask approval. End with a direct question: 'Good to go?' or 'Want me to run with this?'",
   "plan_summary": "one sentence: what you want to do — tests and questions combined",
   "plan_tests": ["exact test name 1", "exact test name 2"],
   "plan_questions": ["question to ask patient 1", "question to ask patient 2"]

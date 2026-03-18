@@ -455,8 +455,27 @@ class Shift:
             return ""
         plan = bay._pending_plan
         res_name = bay.resident.name.split()[0]
-        lines = [
-            f"\n  {res_name}'s plan: {plan.plan_summary}",
+        lines = [""]
+
+        # Show the resident's clinical read so the player can evaluate
+        if hasattr(plan, "differential") and plan.differential:
+            dx_str = " / ".join(plan.differential[:2])
+            lines.append(f"  {res_name}'s read: {dx_str}")
+        if hasattr(plan, "flags") and plan.flags:
+            for flag in plan.flags[:2]:
+                lines.append(f"  ! {flag}")
+        if hasattr(plan, "confidence"):
+            conf = getattr(plan, "confidence", "")
+            if conf:
+                lines.append(f"  Confidence: {conf}")
+
+        lines.append("")
+        lines.append(f"  Plan: {plan.plan_summary}")
+        if hasattr(plan, "plan_tests") and plan.plan_tests:
+            lines.append(f"  Tests: {', '.join(plan.plan_tests)}")
+        if hasattr(plan, "plan_questions") and plan.plan_questions:
+            lines.append(f"  Questions: {'; '.join(plan.plan_questions[:2])}")
+        lines += [
             "",
             "    > 1. Go ahead",
             "      2. Go ahead, but add something",
