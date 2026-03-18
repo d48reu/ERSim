@@ -417,12 +417,45 @@ class PatientSession:
                     any_triggered = True
         return any_triggered
 
-    @staticmethod
-    def _exam_words_match(maneuver: str, trigger_detail: str) -> bool:
+    # Body-region synonym clusters — if maneuver or trigger_detail
+    # contains ANY word in a cluster, it matches ANY other word in
+    # that same cluster.  Add new clusters as needed.
+    _EXAM_SYNONYMS: list = [
+        {"chest", "lung", "lungs", "pulmonary", "respiratory", "auscultation",
+         "breath", "breathing", "crackles", "wheeze", "wheezes", "rales",
+         "rhonchi", "thorax", "thoracic", "percussion", "egophony"},
+        {"abdomen", "abdominal", "belly", "palpation", "palpate", "ruq",
+         "luq", "rlq", "llq", "epigastric", "peritoneal", "rebound",
+         "guarding", "tenderness", "bowel"},
+        {"heart", "cardiac", "cardiovascular", "murmur", "gallop", "rhythm",
+         "precordium", "precordial", "s1", "s2", "s3", "s4"},
+        {"neuro", "neurological", "neurologic", "mental", "gcs", "focal",
+         "reflexes", "cranial", "pupils", "orientation", "cognition"},
+        {"skin", "rash", "integument", "dermatology", "jaundice",
+         "cyanosis", "pallor", "diaphoresis"},
+        {"extremity", "extremities", "leg", "legs", "arm", "arms",
+         "edema", "swelling", "dvt", "calf", "homan"},
+        {"neck", "throat", "cervical", "jvp", "jvd", "lymph", "nodes",
+         "thyroid", "trachea", "meningismus"},
+        {"pelvis", "pelvic", "rectal", "genitourinary", "gu", "flank",
+         "costovertebral", "cva"},
+    ]
+
+    @classmethod
+    def _synonym_cluster(cls, word: str) -> set:
+        """Return the full synonym cluster for a word, or just {word}."""
+        for cluster in cls._EXAM_SYNONYMS:
+            if word in cluster:
+                return cluster
+        return {word}
+
+    @classmethod
+    def _exam_words_match(cls, maneuver: str, trigger_detail: str) -> bool:
         """
         Match exam maneuver against trigger detail text.
 
-        Three strategies in order:
+        Four strategies in order:
+        0. Synonym expansion — chest matches auscultation, lung, etc.
         1. Exact word overlap ("murphy" in "murphy's sign")
         2. Prefix overlap of 5+ chars ("abdomen" vs "abdominal",
            "palpat" vs "palpation", "cardiac" vs "cardiology")
@@ -436,6 +469,16 @@ class PatientSession:
 
         mwords = words(maneuver)
         twords = words(trigger_detail)
+
+        # 0. Synonym expansion
+        expanded_m = set()
+        for w in mwords:
+            expanded_m |= cls._synonym_cluster(w)
+        expanded_t = set()
+        for w in twords:
+            expanded_t |= cls._synonym_cluster(w)
+        if expanded_m & expanded_t:
+            return True
 
         # 1. Exact overlap
         if mwords & twords:

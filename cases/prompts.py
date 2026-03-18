@@ -185,7 +185,7 @@ GeneratedCase schema:
   "reveal_sequence": [
     {
       "trigger": "volunteered|direct_question|trust_established|test_result|family_present|physical_exam|prolonged_stay",
-      "trigger_detail": "string",
+      "trigger_detail": "For physical_exam: comma-separated body-region keywords the attending must examine to unlock this (e.g. 'chest, lungs, auscultation' or 'abdomen, palpation, RUQ'). For test_result: the test name. For direct_question: topic keywords. For others: short description.",
       "information": "string",
       "patient_language": "string",
       "emotional_register": "string"
