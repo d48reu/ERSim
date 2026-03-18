@@ -188,7 +188,7 @@ Commands:
   status            overview of all bays and timers
   chart             see what's been revealed in current bay
   exam <maneuver>   physical exam (e.g. exam abdomen)
-  1 / 2 / 3 / 4    respond to resident's plan (approve/add/redirect/hold)
+  1 / 2 / 3 / 4    respond to plan (approve/add/redirect/hold) or pivot (go ahead/redirect)
   add <text>        approve plan and add something in plain language
   redirect <text>   change the direction of the plan
   test <name>       order test manually (e.g. test troponin)

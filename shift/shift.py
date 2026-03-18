@@ -183,17 +183,21 @@ class Shift:
 
         output = []
 
-        # Show resident opening if first visit
-        if bay.resident_opening and bay_id != prev:
+        # Show resident opening — either first-visit presentation or post-autonomous update
+        if bay.resident_opening:
             res_name = bay.resident.name.split()[0]
+            is_update = getattr(bay, '_resident_opening_is_update', False)
+            label = f"[{res_name} — update]" if is_update else f"[{res_name} intercepts you]"
             output.append(
-                f"\n[{res_name} intercepts you]\n"
+                f"\n{label}\n"
                 f"{res_name}: {bay.resident_opening}\n"
             )
-            bay.resident_opening = ""  # Only show once
-            bay.record("resident", "resident_proactive",
-                      bay.resident_opening_data.what_they_say if bay.resident_opening_data else "",
-                      internal=str(bay.resident_opening_data))
+            bay.resident_opening = ""
+            bay._resident_opening_is_update = False
+            if bay.resident_opening_data and not is_update:
+                bay.record("resident", "resident_proactive",
+                          bay.resident_opening_data.what_they_say,
+                          internal=str(bay.resident_opening_data))
 
         output.append(self._render_bay_header(bay))
 
@@ -426,22 +430,18 @@ class Shift:
 
 
     def _format_pivot(self, bay, pivot) -> str:
-        """Render a pivot interrupt block."""
+        """Render a pivot interrupt — resident's updated plan, not a menu."""
         res_name = bay.resident.name.split()[0]
         lines = [
-            f"\n[{res_name.upper()} — reacts to results]",
+            f"\n[{res_name.upper()} — plan update]",
             f"{res_name}: {pivot.what_they_say}",
+            f"",
+            f"  1. Go ahead",
+            f"  2. Redirect",
+            f"  (or ignore and keep going)",
         ]
-        if pivot.options:
-            lines.append("")
-            for i, opt in enumerate(pivot.options):
-                marker = ">" if i == pivot.recommended else " "
-                lines.append(f"  {marker} {i+1}. {opt}")
-            lines.append("")
-            lines.append(
-                f"  (type 1/2/3 to follow {res_name}'s suggestion, "
-                f"or proceed your own way)"
-            )
+        # Store as a pending plan so 1/2 work
+        bay._pending_pivot = pivot
         return "\n".join(lines)
 
     # ------------------------------------------------------------------
@@ -634,29 +634,50 @@ class Shift:
             }
 
     def follow_suggestion(self, n: int) -> str:
-        """Execute resident's numbered suggestion from the last pivot."""
+        """Respond to resident's pivot plan update. 1=go ahead, 2=redirect."""
         bay = self._require_active_bay()
         if not bay:
             return "You're not in a bay."
 
         pivot = getattr(bay, "_pending_pivot", None)
-        if not pivot or not pivot.options:
-            return "No pending suggestion. Order a test first."
+        if not pivot:
+            return "No pending plan update."
 
-        idx = n - 1
-        if idx < 0 or idx >= len(pivot.options):
-            return f"Option {n} doesn't exist. Choose 1-{len(pivot.options)}."
-
-        chosen = pivot.options[idx]
         res_name = bay.resident.name.split()[0]
-        bay.record("attending", "follow_suggestion", f"chose option {n}: {chosen}")
-
-        # Clear pending pivot so it doesn't re-fire on the next test
         bay._pending_pivot = None
 
-        # Execute it — treat it as a test order (most options are tests/actions)
-        result = self.test(chosen)
-        return f"[Following {res_name}'s suggestion: {chosen}]\n{result}"
+        if n == 1:
+            # Go ahead — execute the resident's updated plan tests
+            bay.record("attending", "pivot_approved", "approved updated plan")
+            bay.resident_ai.attending_backed("approved pivot plan")
+            tests = pivot.options if pivot.options else []
+            if not tests:
+                return f"[{res_name.upper()}]: On it."
+            output = [f"[{res_name.upper()}]: On it."]
+            # Queue all the updated plan tests
+            for test_name in tests:
+                if self._validate_test_name(test_name):
+                    delay = self._get_test_delay(test_name)
+                    if delay < 999:
+                        full_result = bay.patient_session.order_test(test_name)
+                        bay.record("attending", "test", test_name)
+                        due_turn = self.global_turn + delay
+                        due_clock = self._format_clock(due_turn)
+                        bay.pending_results.append((due_turn, test_name, full_result, bay.bay_id))
+                        delay_min = delay * SHIFT_MINUTES_PER_TURN
+                        output.append(f"  [{test_name}] ordered — due ~{due_clock} (~{delay_min} min)")
+            return "\n".join(output)
+
+        elif n == 2:
+            # Redirect — prompt for direction
+            bay.record("attending", "pivot_redirected", "redirected updated plan")
+            bay.resident_ai.attending_overrode("redirected pivot plan")
+            return (
+                f"[{res_name.upper()}]: Okay, what direction?\n"
+                f"  (type: redirect <your thinking>)"
+            )
+
+        return "Type 1 to go ahead or 2 to redirect."
 
     def ask_resident(self, question: str) -> str:
         """Ask the resident a question about the current case."""
@@ -868,6 +889,14 @@ class Shift:
 
         # Build case state at time of firing
         reveal_summary = bay.patient_session.get_reveal_summary()
+
+        # Use approved plan_tests if available, else resident decides autonomously
+        pending_plan = bay._pending_plan
+        planned_tests = []
+        if pending_plan and pending_plan.plan_tests:
+            planned_tests = pending_plan.plan_tests
+            bay._pending_plan = None  # Consume the plan
+
         case_state = {
             "known_to_resident": (
                 f"Triage: {bay.triage_summary}. "
@@ -877,6 +906,7 @@ class Shift:
             ),
             "actions_taken": reveal_summary["tests_ordered"],
             "pending": [l["trigger_detail"] for l in reveal_summary["locked"]],
+            "planned_tests": planned_tests,  # Tell resident what was already planned
         }
 
         action = bay.resident_ai.act_autonomously(
@@ -884,6 +914,20 @@ class Shift:
             timer_duration_minutes=bay.timer_ticks * 3,
             case_state_at_timer=case_state,
         )
+
+        # If we had a plan, execute the tests silently in the background
+        if planned_tests:
+            prev_active = self.active_bay_id
+            self.active_bay_id = bay_id  # Temporarily set active for test execution
+            for test_name in planned_tests:
+                if self._validate_test_name(test_name):
+                    delay = self._get_test_delay(test_name)
+                    if delay < 999:
+                        full_result = bay.patient_session.order_test(test_name)
+                        bay.record("resident", "autonomous_test", test_name)
+                        due_turn = self.global_turn + delay
+                        bay.pending_results.append((due_turn, test_name, full_result, bay_id))
+            self.active_bay_id = prev_active
 
         bay.record(
             "resident", "autonomous_action",
@@ -898,6 +942,12 @@ class Shift:
         # Store for when attending returns
         bay._pending_autonomous_report = action
         self._autonomous_queue.append(bay_id)
+
+        # Re-populate resident_opening with the update so go() shows
+        # what happened, not the stale original shift-start greeting
+        res_name_short = bay.resident.name.split()[0]
+        bay.resident_opening = action.what_they_tell_attending
+        bay._resident_opening_is_update = True  # Flag: this is a catch-up, not first visit
 
         res_name = bay.resident.name.split()[0]
         acuity = bay.acuity
