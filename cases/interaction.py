@@ -165,13 +165,15 @@ Return a JSON object with one field:
   "triggered": true or false
 }
 
-Be conservative. The trigger should be clearly met, not possibly met.
-A direct question trigger requires a direct, specific question — not
-a general question that happens to touch the area.
-A trust_established trigger requires genuine rapport demonstrated
-over multiple exchanges — not just one friendly question.
-A test_result trigger requires that the specific test has been
-explicitly ordered and time has passed for results.
+For DIRECT_QUESTION: fire if the attending asked a question that
+directly addresses the trigger condition topic — even if phrased
+conversationally. A clear question about the right subject is enough.
+Do NOT require word-for-word matching; semantic match is sufficient.
+
+For TRUST_ESTABLISHED: requires genuine rapport over multiple exchanges,
+not just one friendly question.
+
+For VOLUNTEERED / PROLONGED_STAY: evaluated by turn count, not here.
 """
 
 
@@ -564,7 +566,22 @@ Has the trigger condition been met? Return JSON only: {{"triggered": true}} or {
             import json
             result = json.loads(raw)
             return result.get("triggered", False)
-        except Exception:
+        except Exception as e:
+            import sys
+            print(f"[WARN] trigger eval failed ({type(e).__name__}: {e})", file=sys.stderr)
+            # Fallback for direct_question: keyword overlap between
+            # attending message and trigger_detail
+            if node.trigger == RevealTrigger.DIRECT_QUESTION:
+                import re as _re
+                def _words(s):
+                    return set(_re.sub(r"[^\w\s]", "", s.lower()).split())
+                overlap = _words(attending_message) & _words(node.trigger_detail)
+                # exclude stopwords
+                overlap -= {"the","a","an","is","are","was","were","has","have",
+                            "do","did","how","what","when","where","why","who",
+                            "long","been","you","your","i","it","in","of","to",
+                            "and","or","for","that","this","with","about"}
+                return bool(overlap)
             return False
 
     # ------------------------------------------------------------------
