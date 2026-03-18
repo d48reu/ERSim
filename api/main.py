@@ -14,10 +14,13 @@ Run with:
 import asyncio
 import json
 import io
+import os
 from contextlib import redirect_stdout
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from .session import create_session, get_session, remove_session
 from .commands import process_command
@@ -176,3 +179,17 @@ async def session_status(session_id: str):
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------------
+# Serve React frontend (production build)
+# Mount last so API routes take priority
+# ---------------------------------------------------------------------------
+
+_static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.isdir(_static_dir):
+    app.mount("/assets", StaticFiles(directory=os.path.join(_static_dir, "assets")), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_frontend(full_path: str):
+        return FileResponse(os.path.join(_static_dir, "index.html"))
