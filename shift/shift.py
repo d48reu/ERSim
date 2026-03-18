@@ -74,12 +74,15 @@ TEST_DELAYS = {
     "mri":             12,
     "ultrasound":       8,
     "echo":            10,
-    # Never resolves this shift
-    "blood culture":  999,
-    "culture":        999,
+    # Ordered and drawn this shift — results post-shift (sent to admitting team)
+    "blood culture":  998,
+    "culture":        998,
+    "sputum culture": 998,
+    "wound culture":  998,
+    "urine culture":  998,
+    # Truly never resolves (days-weeks)
     "ppd":            999,
     "tb":             999,
-    "sputum":         999,
 }
 
 SHIFT_START_TURN = 0
@@ -378,6 +381,12 @@ class Shift:
                 f"[{test_name}] ordered — results not available this shift. "
                 f"Flag for follow-up."
             )
+        if delay == 998:
+            bay.record("attending", "test", test_name)
+            return (
+                f"[{test_name}] drawn and sent — results post-shift, "
+                f"will follow with admitting team."
+            )
 
         # Get full result from patient session but don't show it yet
         full_result = bay.patient_session.order_test(test_name)
@@ -412,6 +421,10 @@ class Shift:
             if delay >= 999:
                 bay.record("attending", "test", name)
                 output.append(f"  [{name}] — not available this shift, flag for follow-up")
+                continue
+            if delay == 998:
+                bay.record("attending", "test", name)
+                output.append(f"  [{name}] drawn and sent — results post-shift with admitting team")
                 continue
             full_result = bay.patient_session.order_test(name)
             bay.record("attending", "test", name)
