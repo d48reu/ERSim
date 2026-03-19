@@ -245,6 +245,7 @@ class ResidentAI:
                 what_they_say=data.get("what_they_say", ""),
                 options=data.get("options", []),
                 recommended=data.get("recommended", 0),
+                plan_tests=data.get("plan_tests", []),
             )
         except Exception:
             return ResidentPivot(

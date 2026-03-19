@@ -400,7 +400,17 @@ Does this materially change the picture? If YES: react in your voice, give 2-3 s
 If NO (routine/confirmatory): triggered=false.
 
 Return ONLY raw JSON:
-{{"triggered": true/false, "pivot_reason": "...", "what_they_say": "...", "options": ["...", "..."], "recommended": 0}}"""
+{{
+  "triggered": true/false,
+  "pivot_reason": "one sentence: why this result changes the picture",
+  "what_they_say": "your words to the attending — hallway speed",
+  "options": ["short display label for option 1", "short display label for option 2"],
+  "recommended": 0,
+  "plan_tests": ["exact test name 1", "exact test name 2"]
+}}
+
+options: 2 short human-readable labels shown to the attending (e.g. "CT angio now", "Hold imaging, start anticoag")
+plan_tests: exact test/order strings to execute when attending approves option 0 (the recommended one). Use the same naming as you would for a plan_tests array. If the recommended action is non-test (e.g. start a drip), leave empty."""
 
 
 # ---------------------------------------------------------------------------

@@ -117,8 +117,9 @@ class ResidentPivot:
     triggered: bool               # Did this result actually change anything?
     pivot_reason: str             # Internal: why this is a pivot (not said aloud)
     what_they_say: str            # Natural hallway speech — in their voice
-    options: list[str]            # 2-3 concrete suggested next moves (short phrases)
+    options: list[str]            # 2-3 display-only choice descriptions for attending
     recommended: int              # Index of their preferred option (0-based)
+    plan_tests: list[str] = field(default_factory=list)  # Actual test names to execute on approve
 
 @dataclass
 class ResidentAssessment:

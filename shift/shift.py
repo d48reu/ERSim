@@ -679,18 +679,21 @@ class Shift:
         bay._pending_pivot = None
 
         if n == 1:
-            # Go ahead — execute the resident's updated plan tests
+            # Go ahead — execute the resident's recommended plan_tests
             bay.record("attending", "pivot_approved", "approved updated plan")
             bay.resident_ai.attending_backed("approved pivot plan")
-            tests = pivot.options if pivot.options else []
+            tests = pivot.plan_tests if pivot.plan_tests else []
+            output = [f"[{res_name.upper()}]: Got it, running with it."]
             if not tests:
-                return f"[{res_name.upper()}]: On it."
-            output = [f"[{res_name.upper()}]: On it."]
+                return "\n".join(output)
             # Queue all the updated plan tests
             for test_name in tests:
                 if self._validate_test_name(test_name):
                     delay = self._get_test_delay(test_name)
-                    if delay < 999:
+                    if delay == 998:
+                        bay.record("attending", "test", test_name)
+                        output.append(f"  [{test_name}] drawn and sent — results post-shift")
+                    elif delay < 998:
                         full_result = bay.patient_session.order_test(test_name)
                         bay.record("attending", "test", test_name)
                         due_turn = self.global_turn + delay
@@ -698,6 +701,8 @@ class Shift:
                         bay.pending_results.append((due_turn, test_name, full_result, bay.bay_id))
                         delay_min = delay * SHIFT_MINUTES_PER_TURN
                         output.append(f"  [{test_name}] ordered — due ~{due_clock} (~{delay_min} min)")
+                else:
+                    output.append(f"  [{test_name}] — not recognized, skipped")
             return "\n".join(output)
 
         elif n == 2:
@@ -826,14 +831,41 @@ class Shift:
         bay.resolution_note = note
         bay.record("attending", "resolve", f"{disposition}: {note}")
 
-        # Compare to correct disposition
+        # Compare to correct disposition — normalize both sides
         correct = bay.case.outcome_trajectory.disposition
         patient_name = bay.patient_name
 
+        def _norm_dispo(s: str) -> str:
+            """Normalize disposition strings for comparison.
+            Handles: admit-icu, admit-ICU, ICU, admit_icu, admiticu, etc."""
+            s = s.lower().replace("-", "").replace("_", "").replace(" ", "")
+            # Canonical aliases
+            aliases = {
+                "admiticu": "admiticu",
+                "icu": "admiticu",
+                "admitfloor": "admitfloor",
+                "floor": "admitfloor",
+                "admit": "admitfloor",
+                "discharge": "discharge",
+                "discharged": "discharge",
+                "home": "discharge",
+                "transfer": "transfer",
+                "ortho": "or",
+                "or": "or",
+                "cathlab": "cathlab",
+                "cath": "cathlab",
+                "ama": "ama",
+            }
+            return aliases.get(s, s)
+
+        player_dispo = _norm_dispo(disposition)
+        correct_dispo = _norm_dispo(correct)
+
         lines = [f"[{bay.bay_id}] {patient_name} — {disposition.upper()}"]
 
-        if disposition.lower() == correct.lower():
+        if player_dispo == correct_dispo:
             lines.append(f"  Correct disposition.")
+            lines.append(f"  Outcome: {bay.case.outcome_trajectory.correct_outcome}")
         else:
             lines.append(
                 f"  Note: Recommended was {correct}. "
