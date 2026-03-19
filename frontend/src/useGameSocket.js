@@ -95,8 +95,16 @@ export function useGameSocket() {
     }
   }, [addMessage]);
 
+  // Silent send — no echo, response marked silent (sidebar-only)
+  const sendSilent = useCallback((text) => {
+    if (!text?.trim()) return;
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ command: text, silent: true }));
+    }
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => () => wsRef.current?.close(), []);
 
-  return { messages, status, sessionData, sendCommand, startSession };
+  return { messages, status, sessionData, sendCommand, sendSilent, startSession };
 }

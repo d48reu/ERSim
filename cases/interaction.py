@@ -532,9 +532,9 @@ class PatientSession:
         if node.trigger == RevealTrigger.PROLONGED_STAY:
             return self.turn_count >= 8
 
-        # TRUST_ESTABLISHED: requires multiple turns of genuine engagement
+        # TRUST_ESTABLISHED: requires genuine engagement — min 2 turns
         if node.trigger == RevealTrigger.TRUST_ESTABLISHED:
-            if self.turn_count < 5:
+            if self.turn_count < 2:
                 return False
 
         # For DIRECT_QUESTION and TRUST_ESTABLISHED (after turn check):

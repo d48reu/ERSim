@@ -35,13 +35,20 @@ TEST_DELAYS = {
     # Near-instant
     "glucose":          1,
     "fingerstick":      1,
+    "blood glucose":    1,
     "ekg":              2,
     "ecg":              2,
+    "electrocardiogram": 2,
+    "electrocardiography": 2,
+    "12-lead":          2,
+    "12 lead":          2,
     # Quick labs
     "cxr":              4,
     "chest x":          4,
     "xray":             4,
     "x-ray":            4,
+    "chest radiograph": 4,
+    "portable chest":   4,
     "urinalysis":       3,
     "ua":               3,
     "urine":            3,
@@ -175,6 +182,13 @@ class Shift:
         if bay.status == BayStatus.RESOLVED:
             return f"{bay_id} is closed — {bay.disposition}."
 
+        # Auto-leave current bay before entering new one
+        if self.active_bay_id and self.active_bay_id != bay_id:
+            prev_bay = self.bays[self.active_bay_id]
+            if prev_bay.status != BayStatus.RESOLVED:
+                prev_bay.status = BayStatus.SUPERVISED
+                prev_bay.timer_ticks = 0
+
         # Tick all other supervised bays
         self._tick_others(bay_id)
 
@@ -295,7 +309,60 @@ class Shift:
         "monospot", "ebv", "cmv", "rsv", "covid", "panel", "toxicology", "tox",
         "acetaminophen", "aspirin", "alcohol", "ethanol", "drug", "screen",
         "abg", "vbg", "gas", "oximetry", "peak flow", "spirometry",
+        # thyroid / endocrine
+        "free t4", "free t3", "ft4", "ft3", "t4", "t3", "tft",
+        # coag / heme
+        "fibrinogen", "d dimer", "anti-xa", "anti xa", "heparin",
+        # micro / id
+        "antigen", "pcr", "rapid", "swab", "mono", "heterophile",
+        # cardiac
+        "ck", "ck-mb", "ckmb", "nt-probnp", "ntprobnp",
+        # electrolytes / metabolic
+        "sodium", "potassium", "creatinine", "bun", "bicarbonate",
+        "calcium", "magnesium", "phosphorus", "albumin",
+        # imaging long-form
+        "electrocardiogram", "radiograph", "angiogram", "angiography",
+        "tomography", "resonance", "sonogram", "doppler",
+        # drug levels
+        "level", "serum", "digoxin", "lithium", "vancomycin", "phenytoin",
+        # neuro
+        "lumbar", "puncture", "csf", "spinal",
+        # other
+        "hypercoagulability", "hypercoag", "thrombophilia", "factor",
     }
+
+    # Normalize common long-form test names to canonical keys before lookup
+    _TEST_NAME_NORMALIZE = {
+        "electrocardiogram": "ecg",
+        "electrocardiography": "ecg",
+        "12-lead ecg": "ecg",
+        "12-lead ekg": "ekg",
+        "complete blood count": "cbc",
+        "complete blood count with differential": "cbc",
+        "cbc with differential": "cbc",
+        "basic metabolic panel": "bmp",
+        "comprehensive metabolic panel": "bmp",
+        "chest x-ray": "chest x",
+        "chest xray": "chest x",
+        "chest radiograph": "chest x",
+        "portable chest x-ray": "chest x",
+        "arterial blood gas": "abg",
+        "venous blood gas": "vbg",
+        "arterial or venous blood gas": "abg",
+        "free t4": "tsh",
+        "free thyroxine": "tsh",
+        "thyroid function tests": "tsh",
+        "d-dimer": "d-dimer",
+        "d dimer": "d-dimer",
+        "urine drug screen": "urine",
+        "urine drug screening": "urine",
+        "toxicology screen": "tox",
+    }
+
+    def _normalize_test_name(self, test_name: str) -> str:
+        """Normalize verbose test names to canonical short keys."""
+        lower = test_name.lower().strip()
+        return self._TEST_NAME_NORMALIZE.get(lower, test_name)
 
     def _validate_test_name(self, test_name: str) -> bool:
         """
@@ -366,7 +433,8 @@ class Shift:
         if not bay:
             return "You're not in a bay."
 
-        # Validate before doing anything
+        # Normalize then validate
+        test_name = self._normalize_test_name(test_name)
         if not self._validate_test_name(test_name):
             return f"[?] '{test_name}' — not recognized as a test. Try being more specific."
 
@@ -414,6 +482,7 @@ class Shift:
         output = []
         skipped = []
         for name in test_names:
+            name = self._normalize_test_name(name)
             if not self._validate_test_name(name):
                 skipped.append(name)
                 continue
@@ -897,14 +966,16 @@ class Shift:
             still_pending = [r for r in bay.pending_results if r[0] > self.global_turn]
             bay.pending_results = still_pending
 
+            if not due:
+                continue
+
+            if not hasattr(bay, '_test_results'):
+                bay._test_results = {}
+
+            # Show each result inline
             for (due_turn, test_name, full_result, bid) in due:
-                # Store full result in bay for chart view
-                if not hasattr(bay, '_test_results'):
-                    bay._test_results = {}
                 bay._test_results[test_name] = full_result
                 bay.record("system", "test_result", f"{test_name}: {full_result}")
-
-                # Show only a short summary inline
                 summary_line = self._summarize_result(test_name, full_result)
                 header = (
                     f"[{bay_id} — {bay.patient_name}]  "
@@ -912,19 +983,30 @@ class Shift:
                 )
                 notifications.append(f"{header}\n  {summary_line}\n  (type 'chart' for full report)")
 
-                # Fire pivot interrupt with full result (capped for token safety)
-                interaction_summary = self._bay_interaction_summary(bay)
-                pivot = bay.resident_ai.pivot_interrupt(
-                    case=bay.case,
-                    test_name=test_name,
-                    test_result=full_result[:300],
-                    interaction_summary=interaction_summary,
-                )
-                if pivot.triggered and pivot.what_they_say:
-                    notifications.append(self._format_pivot(bay, pivot))
-                    bay._pending_pivot = pivot
-                    bay.record("resident", "pivot_interrupt", pivot.what_they_say,
-                              internal=pivot.pivot_reason)
+            # Fire ONE batched pivot for all due results this turn
+            if len(due) == 1:
+                test_name, full_result = due[0][1], due[0][2]
+                combined_name = test_name
+                combined_result = full_result[:300]
+            else:
+                combined_name = ", ".join(r[1] for r in due)
+                combined_result = "\n".join(
+                    f"{r[1].upper()}: {self._summarize_result(r[1], r[2])}"
+                    for r in due
+                )[:400]
+
+            interaction_summary = self._bay_interaction_summary(bay)
+            pivot = bay.resident_ai.pivot_interrupt(
+                case=bay.case,
+                test_name=combined_name,
+                test_result=combined_result,
+                interaction_summary=interaction_summary,
+            )
+            if pivot.triggered and pivot.what_they_say:
+                notifications.append(self._format_pivot(bay, pivot))
+                bay._pending_pivot = pivot
+                bay.record("resident", "pivot_interrupt", pivot.what_they_say,
+                          internal=pivot.pivot_reason)
 
         return notifications
 

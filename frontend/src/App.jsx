@@ -4,6 +4,7 @@ import './App.css';
 
 export default function App() {
   const { messages, status, sessionData, sendCommand, startSession } = useGameSocket();
+  // sendSilent available from useGameSocket if needed for future silent WS commands
   const [input, setInput] = useState('');
   const [history, setHistory] = useState([]);
   const [histIdx, setHistIdx] = useState(-1);
@@ -19,6 +20,21 @@ export default function App() {
   useEffect(() => {
     if (status === 'connected') inputRef.current?.focus();
   }, [status]);
+
+  // Poll REST status every 8s to keep sidebar live without polluting message stream
+  const [liveStatus, setLiveStatus] = useState(null);
+  useEffect(() => {
+    if (status !== 'connected' || !sessionData) return;
+    const poll = async () => {
+      try {
+        const res = await fetch(`/session/${sessionData.session_id}/status`);
+        if (res.ok) setLiveStatus(await res.json());
+      } catch {}
+    };
+    poll();
+    const id = setInterval(poll, 8000);
+    return () => clearInterval(id);
+  }, [status, sessionData]);
 
   const submit = (text) => {
     if (!text.trim()) return;
@@ -44,9 +60,11 @@ export default function App() {
     }
   };
 
-  // Parse bay status lines out of the latest status message
-  const bays = parseBays(messages);
-  const clock = parseClock(messages);
+  // Prefer live REST status for sidebar; fall back to message-stream parsing
+  const bays = liveStatus ? parseLiveBays(liveStatus) : parseBays(messages);
+  const clock = liveStatus
+    ? `${liveStatus.clock} — ${Math.max(0, Math.floor((96 - liveStatus.global_turn) * 5 / 60))}h${String(Math.max(0, (96 - liveStatus.global_turn) * 5 % 60)).padStart(2,'0')}m remaining`
+    : parseClock(messages);
 
   return (
     <div className="layout">
@@ -236,6 +254,23 @@ function parseBays(messages) {
     }
   }
   return bays;
+}
+
+function parseLiveBays(liveStatus) {
+  if (!liveStatus?.bays) return [];
+  return liveStatus.bays.map(b => ({
+    id: b.bay_id,
+    acuity: b.acuity,
+    name: b.patient_name,
+    status: b.status,
+    active: b.bay_id === liveStatus.active_bay,
+    urgent: b.timer_pressure === 'critical' || b.timer_pressure === 'high',
+    timer: b.timer_pressure && b.timer_pressure !== 'none'
+      ? `${b.timer_pressure} pressure`
+      : null,
+    pending: b.pending_results > 0 ? `${b.pending_results} pending` : null,
+    resident: null,
+  }));
 }
 
 function parseClock(messages) {

@@ -118,6 +118,23 @@ Do not invent medical facts. Every finding, every lab
 value, every imaging result must be consistent with the
 true diagnosis and internally coherent.
 
+REVEAL SEQUENCE RULES
+
+The information field must be a clinical fact stated in past tense,
+third person. Never a stage direction. Never "Patient will say X"
+or "Patient will admit Y." Write the fact: "Patient has been taking
+warfarin for 3 years without telling her GP."
+
+Use trust_established ONLY for emotional/rapport disclosures —
+things the patient withholds because they don't feel safe, not
+because they haven't been asked. A patient confessing an abortion,
+admitting they're homeless, disclosing domestic violence — these
+are trust_established. "Patient explains their medication" is NOT
+trust_established; it's a direct_question trigger.
+
+Use direct_question for anything the patient will disclose if
+the attending simply asks about the right topic.
+
 Do not make every case a tragedy. Some people come in,
 get treated, go home fine. The contrast makes the hard
 cases land harder. Aim for roughly one in four cases
@@ -185,8 +202,8 @@ GeneratedCase schema:
   "reveal_sequence": [
     {
       "trigger": "volunteered|direct_question|trust_established|test_result|family_present|physical_exam|prolonged_stay",
-      "trigger_detail": "For physical_exam: comma-separated body-region keywords the attending must examine to unlock this (e.g. 'chest, lungs, auscultation' or 'abdomen, palpation, RUQ'). For test_result: the test name. For direct_question: topic keywords. For others: short description.",
-      "information": "string",
+      "trigger_detail": "For physical_exam: comma-separated body-region keywords (e.g. 'chest, lungs, auscultation'). For test_result: the exact test name. For direct_question: topic keywords the attending must ask about. For trust_established: describe what the patient needs to feel safe enough to share. For others: short description.",
+      "information": "A clinical fact in past tense, third person. NOT a script or stage direction. Write what is true about the patient, not what they 'will say' or 'will admit'. Example: 'Patient started oral contraceptives 2 weeks ago.' NOT 'Patient will admit she started the pill.'",
       "patient_language": "string",
       "emotional_register": "string"
     }
