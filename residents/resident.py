@@ -62,7 +62,7 @@ def _call(
     system: str,
     user: str,
     model: str,
-    max_tokens: int = 600,
+    max_tokens: int = 900,
 ) -> dict:
     """Make a single LLM call and return parsed JSON."""
     response = client.chat.completions.create(
@@ -139,6 +139,8 @@ class ResidentAI:
             )
         except Exception as e:
             # Fallback so the game never hard-crashes on a resident
+            import sys
+            print(f"[WARN] proactive() failed ({type(e).__name__}: {e})", file=sys.stderr)
             r = self.resident
             return ResidentAssessment(
                 differential=[],
