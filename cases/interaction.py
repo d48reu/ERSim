@@ -20,10 +20,14 @@ Usage:
 
 import os
 import re
+import sys
 from dataclasses import dataclass, field
 from typing import Optional
 
 from openai import OpenAI
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from llm import get_client, get_model
 
 from .schema import GeneratedCase, RevealTrigger
 
@@ -217,8 +221,8 @@ class PatientSession:
         model: str = "anthropic/claude-haiku-4-5",
     ):
         self.case = case
-        self.model = model
-        self.client = _get_client()
+        self.model = get_model("gameplay", override=model)
+        self.client = get_client()
 
         self.history: list[InteractionTurn] = []
         self.reveal_states = [
@@ -895,20 +899,4 @@ but never complete — you are still protecting what you protect.)
             return f"[{test_name}]: Result pending."
 
 
-# ---------------------------------------------------------------------------
-# Client helper (same as generator.py)
-# ---------------------------------------------------------------------------
-
-def _get_client() -> OpenAI:
-    key = os.environ.get("OPENROUTER_API_KEY")
-    if not key:
-        env_path = os.path.expanduser("~/.hermes/.env")
-        if os.path.exists(env_path):
-            for line in open(env_path):
-                line = line.strip()
-                if line.startswith("OPENROUTER_API_KEY="):
-                    key = line.split("=", 1)[1].strip()
-                    break
-    if not key:
-        raise RuntimeError("OPENROUTER_API_KEY not found.")
-    return OpenAI(api_key=key, base_url="https://openrouter.ai/api/v1")
+# _get_client() removed — using centralized llm.get_client()

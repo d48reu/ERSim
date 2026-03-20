@@ -13,9 +13,13 @@ personality archetype, current state, relationship with attending.
 import json
 import os
 import re
+import sys
 from typing import Optional
 
 from openai import OpenAI
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from llm import get_client, get_model
 
 from .schema import (
     Resident,
@@ -33,21 +37,6 @@ from .prompts import (
     build_autonomous_prompt,
     build_pivot_prompt,
 )
-
-
-def _get_client() -> OpenAI:
-    key = os.environ.get("OPENROUTER_API_KEY")
-    if not key:
-        env_path = os.path.expanduser("~/.hermes/.env")
-        if os.path.exists(env_path):
-            for line in open(env_path):
-                line = line.strip()
-                if line.startswith("OPENROUTER_API_KEY="):
-                    key = line.split("=", 1)[1].strip()
-                    break
-    if not key:
-        raise RuntimeError("OPENROUTER_API_KEY not found.")
-    return OpenAI(api_key=key, base_url="https://openrouter.ai/api/v1")
 
 
 def _clean_json(raw: str) -> str:
@@ -89,8 +78,8 @@ class ResidentAI:
         model: str = "anthropic/claude-haiku-4-5",
     ):
         self.resident = resident
-        self.model = model
-        self.client = _get_client()
+        self.model = get_model("gameplay", override=model)
+        self.client = get_client()
         self._shift_context: dict = {}
 
     def set_shift_context(self, context: dict):

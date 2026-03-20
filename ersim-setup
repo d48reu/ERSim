@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+"""
+ERSim setup — check prerequisites and pull required Ollama models.
+
+Usage:
+  ./ersim-setup              # Auto-detect VRAM, pull recommended models
+  ./ersim-setup --tier high  # Force a specific tier
+  ./ersim-setup --check      # Just check, don't pull anything
+"""
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+import urllib.request
+
+
+def get_vram_gb() -> float:
+    """Detect NVIDIA GPU VRAM in GB."""
+    try:
+        out = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"],
+            text=True, timeout=5
+        )
+        # Returns MB, take the max GPU
+        vrams = [int(x.strip()) for x in out.strip().split("\n") if x.strip()]
+        if vrams:
+            return max(vrams) / 1024
+    except Exception:
+        pass
+    return 0.0
+
+
+def get_ollama_models() -> list[str]:
+    """Get list of models currently in Ollama."""
+    try:
+        host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+        req = urllib.request.Request(f"{host}/api/tags")
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            data = json.loads(resp.read())
+            return [m["name"] for m in data.get("models", [])]
+    except Exception:
+        return []
+
+
+def pull_model(name: str) -> bool:
+    """Pull a model via ollama CLI."""
+    print(f"  Pulling {name}...")
+    try:
+        result = subprocess.run(
+            ["ollama", "pull", name],
+            timeout=600,  # 10 min max per model
+        )
+        return result.returncode == 0
+    except Exception as e:
+        print(f"    FAILED: {e}")
+        return False
+
+
+# Tier definitions (matching models.yaml)
+TIERS = {
+    "high": {
+        "vram_min": 20,
+        "models": ["glm-4.7-flash", "qwen3.5:27b"],
+    },
+    "medium": {
+        "vram_min": 12,
+        "models": ["qwen3:8b"],
+    },
+    "low": {
+        "vram_min": 6,
+        "models": ["qwen3:8b"],
+    },
+}
+
+
+def detect_tier(vram: float) -> str:
+    """Pick the best tier for available VRAM."""
+    if vram >= 20:
+        return "high"
+    elif vram >= 12:
+        return "medium"
+    elif vram >= 6:
+        return "low"
+    else:
+        return "low"
+
+
+def main():
+    parser = argparse.ArgumentParser(description="ERSim setup")
+    parser.add_argument("--tier", choices=["high", "medium", "low"],
+                        help="Force a specific model tier")
+    parser.add_argument("--check", action="store_true",
+                        help="Check status only, don't pull models")
+    args = parser.parse_args()
+
+    print("ERSim Setup")
+    print("=" * 40)
+
+    # Check Python deps
+    print("\n[1/4] Python environment...")
+    venv_path = os.path.join(os.path.dirname(__file__), ".venv")
+    if os.path.isdir(venv_path):
+        print("  .venv found")
+    else:
+        print("  WARNING: No .venv found. Run: python -m venv .venv && pip install -r requirements.txt")
+
+    # Check Ollama
+    print("\n[2/4] Ollama...")
+    try:
+        subprocess.check_output(["ollama", "--version"], text=True, timeout=5)
+        print("  Ollama CLI found")
+    except Exception:
+        print("  ERROR: ollama not found. Install from https://ollama.ai")
+        sys.exit(1)
+
+    existing = get_ollama_models()
+    if existing:
+        print(f"  {len(existing)} models installed")
+    else:
+        print("  WARNING: Ollama running but no models (or Ollama not running)")
+        print("  Start Ollama: ollama serve")
+
+    # Detect VRAM
+    print("\n[3/4] GPU...")
+    vram = get_vram_gb()
+    if vram > 0:
+        print(f"  GPU VRAM: {vram:.1f} GB")
+    else:
+        print("  WARNING: No NVIDIA GPU detected (or nvidia-smi unavailable)")
+        print("  CPU-only inference will be very slow")
+
+    # Pick tier
+    tier = args.tier or detect_tier(vram)
+    tier_def = TIERS[tier]
+    print(f"  Selected tier: {tier} (requires {tier_def['vram_min']}+ GB)")
+
+    # Check/pull models
+    print(f"\n[4/4] Models for '{tier}' tier...")
+    needed = []
+    for model in tier_def["models"]:
+        # Check if model is already present (partial match on name)
+        base = model.split(":")[0]
+        found = any(m.startswith(base) for m in existing)
+        if found:
+            matching = [m for m in existing if m.startswith(base)]
+            print(f"  {model}: FOUND ({matching[0]})")
+        else:
+            print(f"  {model}: MISSING")
+            needed.append(model)
+
+    if not needed:
+        print("\n  All models ready!")
+    elif args.check:
+        print(f"\n  {len(needed)} model(s) need to be pulled.")
+        print("  Run without --check to pull them.")
+    else:
+        print(f"\n  Pulling {len(needed)} model(s)...")
+        for model in needed:
+            ok = pull_model(model)
+            if not ok:
+                print(f"  FAILED to pull {model}")
+
+    # Summary
+    print("\n" + "=" * 40)
+    print("To start ERSim with Ollama:")
+    print(f"  cd {os.path.dirname(os.path.abspath(__file__))}")
+    print(f"  python run.py --ollama")
+    if tier != "high":
+        print(f"\n  NOTE: Using '{tier}' tier. For best quality, get a 24GB+ GPU")
+        print(f"  and pull: ollama pull glm-4.7-flash && ollama pull qwen3.5:27b")
+
+
+if __name__ == "__main__":
+    main()

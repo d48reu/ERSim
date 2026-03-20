@@ -1,0 +1,39 @@
+# ERSim — recommended models for local (Ollama) inference
+#
+# The game needs two model roles:
+#   gameplay:   fast model for patient/resident dialogue (many calls per turn)
+#   generation: smarter model for pre-shift case generation (fewer, heavier calls)
+#
+# VRAM tiers determine which models fit on your GPU.
+
+tiers:
+  # 24GB+ VRAM (RTX 3090, 4090, A6000, etc.)
+  high:
+    vram_min: 20
+    gameplay: "glm-4.7-flash"          # 19GB, ~46 tok/s, best agentic quality
+    generation: "qwen3.5:27b"          # 17GB, strong reasoning for case design
+    notes: "Best quality. GLM is MoE (30B total, 3B active) so it's fast."
+
+  # 12-16GB VRAM (RTX 4070 Ti, 3080 Ti, etc.)
+  medium:
+    vram_min: 12
+    gameplay: "qwen3:8b"               # 5GB, fast and solid
+    generation: "qwen3:8b"             # Same model, generation quality will be lower
+    notes: "Playable but case generation won't be as rich."
+
+  # 8GB VRAM (RTX 4060, 3060, etc.)
+  low:
+    vram_min: 6
+    gameplay: "qwen3:8b"               # 5GB
+    generation: "qwen3:8b"             # 5GB
+    notes: "Minimum viable. Long waits on generation."
+
+# Alternative models that work well (user can swap via --model):
+alternatives:
+  gameplay:
+    - "qwen3-coder:30b"               # 18GB, good for structured JSON output
+    - "qwen3:30b"                      # 18GB, strong general reasoning
+    - "jackrong-qwen35-opus:27b-q4km"  # 16GB, good synthesis/style
+  generation:
+    - "qwen3:30b"                      # 18GB, good alternative generator
+    - "nemotron30"                      # 24GB, slow but thorough

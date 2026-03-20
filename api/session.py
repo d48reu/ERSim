@@ -7,8 +7,12 @@ In-memory for now. Redis would replace this for horizontal scaling.
 import uuid
 import json
 import os
+import sys
 from typing import Optional
 from fastapi import WebSocket
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from llm import get_model
 
 from cases.schema import GeneratedCase
 from residents.schema import make_default_roster
@@ -46,7 +50,7 @@ class GameSession:
         await self.send("message", {"text": text, "source": source})
 
 
-def create_session(num_bays: int = 3, model: str = "anthropic/claude-haiku-4-5") -> GameSession:
+def create_session(num_bays: int = 3, model: str | None = None) -> GameSession:
     """
     Create a new game session.
     Loads cases from test_output.json, builds Shift, returns session.

@@ -9,27 +9,10 @@ from pydantic import ValidationError
 from .schema import ShiftCasePool, GeneratedCase
 from .prompts import CASE_GENERATION_SYSTEM_PROMPT, build_case_generation_prompt
 
-
-def _get_client():
-    """OpenRouter client — supports Claude models without a direct Anthropic key."""
-    key = os.environ.get("OPENROUTER_API_KEY")
-    if not key:
-        env_path = os.path.expanduser("~/.hermes/.env")
-        if os.path.exists(env_path):
-            for line in open(env_path):
-                line = line.strip()
-                if line.startswith("OPENROUTER_API_KEY="):
-                    key = line.split("=", 1)[1].strip()
-                    break
-    if not key:
-        raise RuntimeError(
-            "OPENROUTER_API_KEY not found. "
-            "Set it in your environment or ~/.hermes/.env"
-        )
-    return OpenAI(
-        api_key=key,
-        base_url="https://openrouter.ai/api/v1",
-    )
+# Use centralized client factory
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from llm import get_client, get_model
 
 
 def _clean_json(raw: str) -> str:
@@ -168,7 +151,7 @@ def generate_shift_cases(
     hospital_profile: str,
     shift_context: dict,
     num_cases: int = 14,
-    model: str = "anthropic/claude-opus-4-5",
+    model: str | None = None,
     max_retries: int = 2,
 ) -> ShiftCasePool:
     """
@@ -176,7 +159,8 @@ def generate_shift_cases(
     Batching avoids output token truncation on large case counts.
     Run this before the shift starts. Never during play.
     """
-    client = _get_client()
+    client = get_client()
+    model = get_model("generation", override=model)
 
     shift_id = f"SHIFT_{datetime.now().strftime('%Y%m%d_%H%M')}"
     shift_context = {**shift_context, "shift_id": shift_id}

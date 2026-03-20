@@ -15,12 +15,17 @@ import asyncio
 import json
 import io
 import os
+import sys
 from contextlib import redirect_stdout
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+
+# Centralized LLM client
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from llm import get_model, _detect_backend
 
 from .session import create_session, get_session, remove_session
 from .commands import process_command
@@ -52,12 +57,14 @@ async def startup():
 # ---------------------------------------------------------------------------
 
 @app.post("/session")
-async def new_session(num_bays: int = 3, model: str = "anthropic/claude-haiku-4-5"):
+async def new_session(num_bays: int = 3, model: str | None = None):
     """
     Create a new game session.
+    Model defaults based on ERSIM_BACKEND (ollama or openrouter).
     Returns session_id and the shift start text.
     """
-    session = create_session(num_bays=num_bays, model=model)
+    resolved_model = get_model("gameplay", override=model)
+    session = create_session(num_bays=num_bays, model=resolved_model)
 
     # Capture shift.setup() stdout (it prints the shift start banner)
     buf = io.StringIO()

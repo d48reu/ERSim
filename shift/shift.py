@@ -19,8 +19,13 @@ The attending's action surface:
 Every action ticks the timer on all OTHER bays.
 """
 
+import os
+import sys
 from dataclasses import dataclass, field
 from typing import Optional
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from llm import get_client, get_model
 
 from cases.schema import GeneratedCase
 from residents.schema import Resident, make_default_roster
@@ -120,9 +125,9 @@ class Shift:
         self,
         cases: list[GeneratedCase],
         residents: Optional[list[Resident]] = None,
-        model: str = "anthropic/claude-haiku-4-5",
+        model: str | None = None,
     ):
-        self.model = model
+        self.model = get_model("gameplay", override=model)
         self.residents = residents or make_default_roster()
         self.global_turn: int = 0
         self.active_bay_id: Optional[str] = None
@@ -654,17 +659,8 @@ class Shift:
 
     def _interpret_addendum(self, bay, plan, addendum: str) -> dict:
         """Use LLM to interpret player's free-text addition."""
-        from openai import OpenAI
-        import os, json, re
-        key = os.environ.get("OPENROUTER_API_KEY")
-        if not key:
-            env_path = os.path.expanduser("~/.hermes/.env")
-            if os.path.exists(env_path):
-                for line in open(env_path):
-                    if line.strip().startswith("OPENROUTER_API_KEY="):
-                        key = line.strip().split("=", 1)[1]
-                        break
-        client = OpenAI(api_key=key, base_url="https://openrouter.ai/api/v1")
+        import json, re
+        client = get_client()
         pl = bay.case.presenting_layer
         try:
             resp = client.chat.completions.create(
@@ -692,17 +688,8 @@ class Shift:
 
     def _interpret_redirect(self, bay, plan, redirect_text: str) -> dict:
         """Use LLM to interpret player's redirect and generate resident reaction."""
-        from openai import OpenAI
-        import os, json, re
-        key = os.environ.get("OPENROUTER_API_KEY")
-        if not key:
-            env_path = os.path.expanduser("~/.hermes/.env")
-            if os.path.exists(env_path):
-                for line in open(env_path):
-                    if line.strip().startswith("OPENROUTER_API_KEY="):
-                        key = line.strip().split("=", 1)[1]
-                        break
-        client = OpenAI(api_key=key, base_url="https://openrouter.ai/api/v1")
+        import json, re
+        client = get_client()
         pl = bay.case.presenting_layer
         personality = bay.resident.personality.value
         try:
