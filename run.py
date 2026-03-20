@@ -106,9 +106,12 @@ def main():
     print(flush=True)
 
     # Launch uvicorn
+    # ws_ping_interval/timeout bumped for slow local LLM inference
     import uvicorn
     uvicorn.run("api.main:app", host=args.host, port=args.port, reload=False,
-                log_level="info")
+                log_level="info",
+                ws_ping_interval=30,
+                ws_ping_timeout=120)
 
 
 if __name__ == "__main__":

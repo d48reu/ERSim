@@ -3,9 +3,19 @@ Command processor — translates player input into shift actions.
 
 Mirrors the logic in shift/test_shift.py but returns structured
 output instead of printing, so the WebSocket layer can push it.
+
+All blocking shift methods (LLM calls) are wrapped in asyncio.to_thread
+to avoid freezing the FastAPI event loop.
 """
 
+import asyncio
+
 from .session import GameSession
+
+
+async def _bg(fn, *args):
+    """Run a blocking shift method in a thread."""
+    return await asyncio.to_thread(fn, *args)
 
 
 async def process_command(session: GameSession, raw: str) -> None:
@@ -25,7 +35,7 @@ async def process_command(session: GameSession, raw: str) -> None:
 
     # @ prefix = talk to resident
     if raw.startswith("@"):
-        result = shift.ask_resident(raw[1:].strip())
+        result = await _bg(shift.ask_resident, raw[1:].strip())
         await session.send_text(result, source="resident")
         return
 
@@ -39,15 +49,15 @@ async def process_command(session: GameSession, raw: str) -> None:
     # ------------------------------------------------------------------
     if first in ("go", "bay", "enter"):
         target = rest or (parts[-1] if len(parts) > 1 else "")
-        result = shift.go(target)
+        result = await _bg(shift.go, target)
         await session.send_text(result, source="system")
 
     elif first == "leave":
-        result = shift.leave()
+        result = shift.leave()  # sync, no LLM
         await session.send_text(result, source="system")
 
     elif first in ("status", "overview", "floor"):
-        result = shift.status()
+        result = shift.status()  # sync, no LLM
         await session.send_text(result, source="system")
 
     # ------------------------------------------------------------------
@@ -57,28 +67,28 @@ async def process_command(session: GameSession, raw: str) -> None:
         n = int(first)
         bay = shift._require_active_bay()
         if bay and bay._pending_plan:
-            result = shift.approve_plan(n)
+            result = await _bg(shift.approve_plan, n)
         else:
-            result = shift.follow_suggestion(n)
+            result = await _bg(shift.follow_suggestion, n)
         await session.send_text(result, source="resident")
 
     elif first == "add":
-        result = shift.approve_plan(2, addendum=rest)
+        result = await _bg(shift.approve_plan, 2, rest)
         await session.send_text(result, source="resident")
 
     elif first == "redirect":
-        result = shift.approve_plan(3, addendum=rest)
+        result = await _bg(shift.approve_plan, 3, rest)
         await session.send_text(result, source="resident")
 
     # ------------------------------------------------------------------
     # In-bay actions
     # ------------------------------------------------------------------
     elif first == "exam":
-        result = shift.exam(rest)
+        result = await _bg(shift.exam, rest)
         await session.send_text(result, source="system")
 
     elif first == "test":
-        result = shift.test(rest)
+        result = await _bg(shift.test, rest)
         await session.send_text(result, source="system")
 
     elif first in ("bundle", "order"):
@@ -86,28 +96,28 @@ async def process_command(session: GameSession, raw: str) -> None:
         if not items:
             await session.send_text("Usage: bundle <test1>, <test2>, ...", source="system")
         else:
-            result = shift.bundle_test(items)
+            result = await _bg(shift.bundle_test, items)
             await session.send_text(result, source="system")
 
     elif first in ("ask",):
-        result = shift.ask_resident(rest)
+        result = await _bg(shift.ask_resident, rest)
         await session.send_text(result, source="resident")
 
     elif first in ("resident", "res"):
-        result = shift.get_resident_read()
+        result = await _bg(shift.get_resident_read)
         await session.send_text(result, source="resident")
 
     elif first == "family":
-        result = shift.family()
+        result = await _bg(shift.family)
         await session.send_text(result, source="system")
 
     elif first == "chart":
-        result = shift.chart()
+        result = shift.chart()  # sync, no LLM
         await session.send_text(result, source="chart")
 
     elif first in ("resolve", "discharge", "admit", "dispo"):
         dispo = rest if rest else "discharge"
-        result = shift.resolve(dispo)
+        result = await _bg(shift.resolve, dispo)
         await session.send_text(result, source="system")
 
     # ------------------------------------------------------------------
@@ -122,9 +132,9 @@ async def process_command(session: GameSession, raw: str) -> None:
         await session.send("shift_ended", {"summary": result})
 
     else:
-        # Free text = talk to patient
+        # Free text = talk to patient (auto-talk when in a bay)
         if shift.active_bay_id:
-            result = shift.talk(raw)
+            result = await _bg(shift.talk, raw)
             await session.send_text(result, source="patient")
         else:
             await session.send_text(

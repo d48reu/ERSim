@@ -48,8 +48,8 @@ _MODEL_DEFAULTS = {
         "generation": "anthropic/claude-opus-4-5",
     },
     "ollama": {
-        "gameplay": "glm-4.7-flash",
-        "generation": "qwen3.5:27b",
+        "gameplay": "qwen3:8b",
+        "generation": "glm-4.7-flash",
     },
 }
 

@@ -45,10 +45,15 @@ export function useGameSocket() {
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
-        const { type, text, source, summary } = msg;
+        const { type, text, source, summary, bays } = msg;
         if (type === 'shift_ended') {
           addMessage('shift_ended', summary || text, 'system');
           setStatus('disconnected');
+        } else if (type === 'setup_complete') {
+          // Update session data with live bay info
+          if (bays) {
+            setSessionData(prev => ({ ...prev, bays, status: 'ready' }));
+          }
         } else if (type === 'result') {
           addMessage('result', text, 'result');
         } else if (type === 'autonomous') {

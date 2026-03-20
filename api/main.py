@@ -61,20 +61,17 @@ async def new_session(num_bays: int = 3, model: str | None = None):
     """
     Create a new game session.
     Model defaults based on ERSIM_BACKEND (ollama or openrouter).
-    Returns session_id and the shift start text.
+    Returns session_id and bay info immediately.
+    Shift setup (LLM calls for resident openings) runs in background.
     """
     resolved_model = get_model("gameplay", override=model)
     session = create_session(num_bays=num_bays, model=resolved_model)
 
-    # Capture shift.setup() stdout (it prints the shift start banner)
-    buf = io.StringIO()
-    with redirect_stdout(buf):
-        session.shift.setup()
-    start_text = buf.getvalue()
-
+    # Return immediately with bay info — setup runs async
     return {
         "session_id": session.session_id,
-        "start_text": start_text,
+        "start_text": "",  # Will be sent over WebSocket when setup completes
+        "status": "setting_up",
         "bays": [
             {
                 "bay_id": bay_id,
@@ -91,6 +88,14 @@ async def new_session(num_bays: int = 3, model: str | None = None):
 # ---------------------------------------------------------------------------
 # WebSocket: game channel
 # ---------------------------------------------------------------------------
+
+def _run_setup_sync(session):
+    """Run shift setup in a thread (blocking LLM calls)."""
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        session.shift.setup()
+    return buf.getvalue()
+
 
 @app.websocket("/session/{session_id}")
 async def game_socket(websocket: WebSocket, session_id: str):
@@ -116,8 +121,33 @@ async def game_socket(websocket: WebSocket, session_id: str):
     await websocket.accept()
     session.websocket = websocket
 
-    # Send current status on connect
-    await session.send_text(session.shift.status(), source="system")
+    # Run setup in background thread if not already done
+    if not session.setup_complete:
+        await session.send_text("Setting up shift — generating resident assessments...", source="system")
+        try:
+            start_text = await asyncio.to_thread(_run_setup_sync, session)
+            session.setup_complete = True
+            if start_text.strip():
+                await session.send_text(start_text, source="system")
+            await session.send_text(session.shift.status(), source="system")
+            await session.send("setup_complete", {
+                "bays": [
+                    {
+                        "bay_id": bay_id,
+                        "patient_name": bay.patient_name,
+                        "acuity": bay.acuity,
+                        "status": bay.status.value,
+                        "triage_summary": bay.triage_summary,
+                        "resident": bay.resident.name,
+                    }
+                    for bay_id, bay in session.shift.bays.items()
+                ],
+            })
+        except Exception as e:
+            await session.send("error", {"text": f"Setup failed: {e}"})
+            return
+    else:
+        await session.send_text(session.shift.status(), source="system")
 
     try:
         while True:
@@ -131,13 +161,12 @@ async def game_socket(websocket: WebSocket, session_id: str):
             if not command:
                 continue
 
-            # Capture any print() calls the shift engine makes
-            buf = io.StringIO()
-            with redirect_stdout(buf):
+            # Run command processing — shift calls may block on LLM
+            # Use to_thread for the blocking parts
+            try:
                 await process_command(session, command)
-            leftover = buf.getvalue().strip()
-            if leftover:
-                await session.send_text(leftover, source="system")
+            except Exception as e:
+                await session.send("error", {"text": f"Command error: {e}"})
 
     except WebSocketDisconnect:
         session.websocket = None

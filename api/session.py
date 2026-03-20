@@ -33,6 +33,7 @@ class GameSession:
         self.session_id = session_id
         self.shift = shift
         self.websocket: Optional[WebSocket] = None
+        self.setup_complete: bool = False
 
     async def send(self, msg_type: str, payload: dict):
         """Push a message to the connected WebSocket client."""
