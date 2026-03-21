@@ -46,9 +46,9 @@ _RESIDENT_TRAP_RULES: dict[str, list[dict]] = {
     "okafor_dre": [
         {
             "label": "elderly_underestimate",
-            "case_signals": ["elderly", "geriatric", "older", "age",
-                             "altered mental", "fall", "delirium"],
+            "case_signals": ["elderly", "geriatric"],
             "case_field": "presenting",  # check presenting layer
+            "min_age": 60,  # ONLY fires on patients 60+
             "blind_spot": "underestimates elderly patients' acuity",
         },
         {
@@ -182,8 +182,14 @@ def _score_trap(resident: Resident, case: GeneratedCase) -> tuple[float, str]:
         "medical_truth": medical_truth_text,
     }
 
+    patient_age = case.presenting_layer.age
+
     hits = []
     for rule in rules:
+        # Age gate: skip rules that require a minimum patient age
+        min_age = rule.get("min_age")
+        if min_age and patient_age < min_age:
+            continue
         search_text = field_map.get(rule["case_field"], miss_text)
         if any(signal in search_text for signal in rule["case_signals"]):
             hits.append(rule)
