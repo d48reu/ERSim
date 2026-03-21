@@ -568,7 +568,8 @@ No explanation before or after. No markdown. Raw JSON only.
   "reasoning": "your internal reasoning — complete, honest",
   "what_they_tell_attending": "what you say out loud when attending returns — in your voice",
   "what_they_dont_say": "what you are quietly not flagging and why — be specific",
-  "confidence_in_action": "low|moderate|high",
-  "potential_consequence": "what might happen as a result of this action"
+  "was_correct": true/false,
+  "consequence": "what happened as a result of this action — specific clinical outcome",
+  "consequence_severity": "none|minor|moderate|major|critical"
 }}
 """

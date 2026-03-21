@@ -150,6 +150,14 @@ class ResidentAutonomousAction:
     what_they_dont_say: str          # What they're quietly not flagging, and why
     was_correct: Optional[bool] = None  # Evaluated after the fact
     consequence: str = ""            # What happens as a result
+    consequence_severity: Literal[
+        "none", "minor", "moderate", "major", "critical"
+    ] = "none"
+    # none: action was correct or neutral
+    # minor: suboptimal but no harm (e.g. over-ordered tests)
+    # moderate: delayed diagnosis, patient discomfort, wasted resources
+    # major: missed diagnosis, wrong treatment, patient at risk
+    # critical: immediate patient danger, code blue territory
 
 
 # ---------------------------------------------------------------------------

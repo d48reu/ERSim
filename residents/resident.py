@@ -280,19 +280,29 @@ class ResidentAI:
                 max_tokens=800,
             )
 
+            # Parse consequence severity with fallback
+            sev_raw = data.get("consequence_severity", "none").lower()
+            valid_sevs = {"none", "minor", "moderate", "major", "critical"}
+            severity = sev_raw if sev_raw in valid_sevs else "none"
+
             action = ResidentAutonomousAction(
                 action_taken=data.get("action_taken", ""),
                 reasoning=data.get("reasoning", ""),
                 what_they_tell_attending=data.get("what_they_tell_attending", ""),
                 what_they_dont_say=data.get("what_they_dont_say", ""),
+                was_correct=data.get("was_correct", None),
+                consequence=data.get("consequence", ""),
+                consequence_severity=severity,
             )
 
             # Update resident state based on outcome
-            confidence = data.get("confidence_in_action", "moderate")
+            was_correct = data.get("was_correct", True)
             self.resident.state.last_case_outcome = (
                 f"Acted autonomously on {case.presenting_layer.chief_complaint} "
-                f"({confidence} confidence)"
+                f"({'correct' if was_correct else 'INCORRECT — ' + severity})"
             )
+            if not was_correct:
+                self.resident.state.recent_mistake = action.consequence[:100]
 
             return action
 

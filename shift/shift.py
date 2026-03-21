@@ -1321,6 +1321,9 @@ class Shift:
 
         # Store for when attending returns
         bay._pending_autonomous_report = action
+        bay._autonomous_consequence_severity = getattr(
+            action, "consequence_severity", "none"
+        )
         self._autonomous_queue.append(bay_id)
 
         # Re-populate resident_opening with the update so go() shows
@@ -1354,6 +1357,276 @@ class Shift:
                 del bay._pending_autonomous_report
         self._autonomous_queue.clear()
         return notifications
+
+    # ------------------------------------------------------------------
+    # End-of-Shift Debrief
+    # ------------------------------------------------------------------
+
+    def debrief(self) -> str:
+        """
+        Generate end-of-shift report card.
+        Call when all bays are resolved or player quits.
+        """
+        lines = [
+            "",
+            "=" * 60,
+            "SHIFT DEBRIEF",
+            "=" * 60,
+            "",
+        ]
+
+        total_bays = len(self.bays)
+        resolved_bays = 0
+        correct_dispositions = 0
+        traps_caught = 0
+        traps_total = 0
+        total_turns_in_bay = 0
+        autonomous_fires = 0
+        consequences_major = 0
+        bay_turn_counts = {}
+
+        for bay_id, bay in self.bays.items():
+            pp = bay.case.patient_profile
+            pl = bay.case.presenting_layer
+            mt = bay.case.medical_truth
+            ot = bay.case.outcome_trajectory
+            res_name = bay.resident.name.split()[0]
+
+            # Count turns spent in this bay
+            turns_here = sum(1 for e in bay.events if e.actor == "attending")
+            bay_turn_counts[bay_id] = turns_here
+            total_turns_in_bay += turns_here
+
+            is_resolved = bay.status.value == "resolved"
+            if is_resolved:
+                resolved_bays += 1
+
+            # Header
+            if is_resolved:
+                correct_dispo = ot.disposition
+                player_dispo = bay.disposition or ""
+
+                def _norm(s):
+                    s = s.lower().replace("-", "").replace("_", "").replace(" ", "")
+                    aliases = {
+                        "admiticu": "admiticu", "icu": "admiticu",
+                        "admitfloor": "admitfloor", "floor": "admitfloor",
+                        "admit": "admitfloor", "discharge": "discharge",
+                        "discharged": "discharge", "home": "discharge",
+                        "transfer": "transfer", "or": "or", "ortho": "or",
+                        "cathlab": "cathlab", "cath": "cathlab", "ama": "ama",
+                    }
+                    return aliases.get(s, s)
+
+                dispo_correct = _norm(player_dispo) == _norm(correct_dispo)
+                if dispo_correct:
+                    correct_dispositions += 1
+                    mark = "OK"
+                else:
+                    mark = "XX"
+
+                lines.append(
+                    f"  {bay_id}: {bay.patient_name} — "
+                    f"{player_dispo.upper()} [{mark}]"
+                )
+            else:
+                lines.append(
+                    f"  {bay_id}: {bay.patient_name} — UNRESOLVED"
+                )
+
+            # True diagnosis
+            lines.append(f"    True dx: {mt.true_diagnosis}")
+
+            # Disposition accuracy
+            if is_resolved:
+                if dispo_correct:
+                    lines.append(
+                        f"    Outcome: {ot.correct_outcome}"
+                    )
+                else:
+                    lines.append(
+                        f"    Should have been: {ot.disposition}"
+                    )
+                    lines.append(
+                        f"    Consequence: {ot.missed_diagnosis}"
+                    )
+
+            # Trap case
+            if bay.is_trap:
+                traps_total += 1
+                # Did the attending override the resident's read?
+                # Check if there was a redirect/push-back event
+                attending_intervened = any(
+                    e.event_type in ("redirect", "approve_modified", "talk")
+                    and e.actor == "attending"
+                    for e in bay.events
+                )
+                if is_resolved and dispo_correct:
+                    traps_caught += 1
+                    lines.append(
+                        f"    ** TRAP CASE — You caught it. "
+                        f"{res_name}'s blind spot: {bay.trap_detail[:80]}"
+                    )
+                elif is_resolved:
+                    lines.append(
+                        f"    ** TRAP CASE — Missed. "
+                        f"{res_name} led you wrong. "
+                        f"Blind spot: {bay.trap_detail[:80]}"
+                    )
+                else:
+                    lines.append(
+                        f"    ** TRAP CASE — Unresolved. "
+                        f"{res_name}'s read may have been off."
+                    )
+
+            # Autonomous action
+            if bay.autonomous_fired:
+                autonomous_fires += 1
+                report = getattr(bay, '_pending_autonomous_report', None)
+                # Also check events for autonomous action records
+                auto_events = [e for e in bay.events
+                               if e.event_type == "autonomous_action"]
+                if auto_events:
+                    last_auto = auto_events[-1]
+                    lines.append(
+                        f"    Autonomous: {res_name} acted — "
+                        f"{last_auto.content[:80]}"
+                    )
+                    # Check severity from bay record
+                    if hasattr(bay, '_autonomous_consequence_severity'):
+                        sev = bay._autonomous_consequence_severity
+                        if sev in ("major", "critical"):
+                            consequences_major += 1
+                            lines.append(
+                                f"    !! CONSEQUENCE ({sev.upper()})"
+                            )
+
+            # Reveal count
+            if bay.patient_session:
+                reveal_summary = bay.patient_session.get_reveal_summary()
+                revealed = len(reveal_summary.get("revealed", []))
+                total_reveals = revealed + len(reveal_summary.get("locked", []))
+                lines.append(
+                    f"    Reveals: {revealed}/{total_reveals} unlocked"
+                )
+
+            # Time
+            lines.append(f"    Attending turns: {turns_here}")
+            lines.append(f"    Resident: {bay.resident.name}")
+            lines.append("")
+
+        # --- Shift-level grades ---
+        lines.append("-" * 40)
+
+        # Disposition accuracy
+        if resolved_bays > 0:
+            dispo_pct = correct_dispositions / resolved_bays * 100
+            lines.append(
+                f"  Disposition accuracy: "
+                f"{correct_dispositions}/{resolved_bays} "
+                f"({dispo_pct:.0f}%)"
+            )
+        else:
+            dispo_pct = 0
+            lines.append("  Disposition accuracy: no cases resolved")
+
+        # Resolution rate
+        lines.append(
+            f"  Cases resolved: {resolved_bays}/{total_bays}"
+        )
+
+        # Attention distribution
+        if bay_turn_counts and total_turns_in_bay > 0:
+            max_turns = max(bay_turn_counts.values())
+            attention_pct = max_turns / total_turns_in_bay * 100
+            if attention_pct > 70:
+                attn_grade = "poor (tunnel vision)"
+            elif attention_pct > 50:
+                attn_grade = "uneven"
+            else:
+                attn_grade = "balanced"
+            lines.append(
+                f"  Attention distribution: {attn_grade} "
+                f"(heaviest bay: {attention_pct:.0f}%)"
+            )
+
+        # Trap performance
+        if traps_total > 0:
+            lines.append(
+                f"  Trap cases caught: {traps_caught}/{traps_total}"
+            )
+
+        # Autonomous fires
+        if autonomous_fires > 0:
+            lines.append(
+                f"  Autonomous actions: {autonomous_fires} "
+                f"({consequences_major} with major consequences)"
+            )
+
+        # Overall grade
+        grade = self._compute_grade(
+            dispo_pct=dispo_pct,
+            resolved_rate=resolved_bays / total_bays * 100 if total_bays else 0,
+            traps_caught=traps_caught,
+            traps_total=traps_total,
+            consequences_major=consequences_major,
+            autonomous_fires=autonomous_fires,
+        )
+        lines.append("")
+        lines.append(f"  SHIFT GRADE: {grade}")
+        lines.append("=" * 60)
+
+        return "\n".join(lines)
+
+    def _compute_grade(
+        self,
+        dispo_pct: float,
+        resolved_rate: float,
+        traps_caught: int,
+        traps_total: int,
+        consequences_major: int,
+        autonomous_fires: int,
+    ) -> str:
+        """Compute letter grade from shift metrics."""
+        score = 0.0
+
+        # Disposition accuracy (40% weight)
+        score += (dispo_pct / 100) * 40
+
+        # Resolution rate (20% weight)
+        score += (resolved_rate / 100) * 20
+
+        # Trap catch (20% weight)
+        if traps_total > 0:
+            score += (traps_caught / traps_total) * 20
+        else:
+            score += 15  # No traps = partial credit
+
+        # Penalty for major consequences (up to -15)
+        score -= consequences_major * 7.5
+
+        # Penalty for autonomous fires (up to -10)
+        score -= autonomous_fires * 3.3
+
+        # Bonus for clean sheet (no autonomous, all correct)
+        if autonomous_fires == 0 and dispo_pct == 100 and resolved_rate == 100:
+            score += 10
+
+        # Map to letter grade
+        if score >= 90:
+            return "A"
+        elif score >= 80:
+            return "B+"
+        elif score >= 70:
+            return "B"
+        elif score >= 60:
+            return "C+"
+        elif score >= 50:
+            return "C"
+        elif score >= 40:
+            return "D"
+        else:
+            return "F"
 
     # ------------------------------------------------------------------
     # Rendering helpers

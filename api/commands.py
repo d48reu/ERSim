@@ -119,6 +119,14 @@ async def process_command(session: GameSession, raw: str) -> None:
         dispo = rest if rest else "discharge"
         result = await _bg(shift.resolve, dispo)
         await session.send_text(result, source="system")
+        # Auto-debrief when all bays resolved
+        all_resolved = all(
+            b.status.value == "resolved" for b in shift.bays.values()
+        )
+        if all_resolved:
+            debrief = shift.debrief()
+            await session.send_text(debrief, source="system")
+            await session.send("shift_ended", {"summary": debrief})
 
     # ------------------------------------------------------------------
     # Meta
@@ -127,9 +135,9 @@ async def process_command(session: GameSession, raw: str) -> None:
         await session.send_text(HELP_TEXT, source="system")
 
     elif first in ("quit", "exit", "end"):
-        result = _build_shift_summary(shift)
-        await session.send_text(result, source="system")
-        await session.send("shift_ended", {"summary": result})
+        debrief = shift.debrief()
+        await session.send_text(debrief, source="system")
+        await session.send("shift_ended", {"summary": debrief})
 
     else:
         # Free text = talk to patient (auto-talk when in a bay)
