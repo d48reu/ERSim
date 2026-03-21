@@ -96,16 +96,20 @@ class ResidentAI:
     # Mode 1: Proactive — resident presents a new case
     # ------------------------------------------------------------------
 
-    def proactive(self, case) -> ResidentAssessment:
+    def proactive(self, case, trap_context: str = "") -> ResidentAssessment:
         """
         Resident initiates — presents a new case to the attending.
         Called when a new patient arrives and the resident has done
         their initial assessment.
+
+        If trap_context is set, this case is a trap — the resident's
+        blind spots align with the case's miss pattern.
         """
         user_prompt = build_proactive_prompt(
             resident=self.resident,
             case=case,
             shift_context=self._shift_context,
+            trap_context=trap_context,
         )
 
         try:

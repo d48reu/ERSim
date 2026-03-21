@@ -83,6 +83,10 @@ class Bay:
     disposition: str = ""
     resolution_note: str = ""
 
+    # Trap case — resident's blind spots align with this case's miss reason
+    is_trap: bool = False
+    trap_detail: str = ""  # Why this is a trap for THIS resident
+
     # Approval system state
     _pending_plan: Optional[object] = None   # ResidentAssessment with plan fields
     _plan_prompt_turns: int = 0              # Patient turns since plan was presented

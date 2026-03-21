@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from llm import get_model
 
 from cases.schema import GeneratedCase
-from residents.schema import make_default_roster
+from residents.schema import select_shift_roster
 from shift.shift import Shift
 
 
@@ -89,8 +89,7 @@ def create_session(num_bays: int = 3, model: str | None = None) -> GameSession:
         picks = random.sample(cases_raw, min(num_bays, len(cases_raw)))
 
     cases = [GeneratedCase.model_validate(c) for c in picks]
-    residents = make_default_roster()
-    random.shuffle(residents)
+    residents = select_shift_roster()
 
     shift = Shift(cases=cases, residents=residents, model=model)
 

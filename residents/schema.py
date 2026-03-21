@@ -158,10 +158,12 @@ class ResidentAutonomousAction:
 
 def make_default_roster() -> list[Resident]:
     """
-    Three starting residents with distinct personalities and competency profiles.
-    The attending gets to know all three over the campaign.
+    Six residents with distinct personalities and competency profiles.
+    Each shift picks 3 via select_shift_roster() for variety.
     """
     return [
+        # --- ORIGINAL THREE ---
+
         Resident(
             id="chen_maya",
             name="Maya Chen",
@@ -251,4 +253,142 @@ def make_default_roster() -> list[Resident]:
                 "because the textbook says something different."
             ),
         ),
+
+        # --- NEW THREE ---
+
+        Resident(
+            id="rivers_jordan",
+            name="Jordan Rivers",
+            year=ResidentYear.PGY2,
+            personality=PersonalityArchetype.BURNING_OUT,
+            competency=ResidentCompetency(
+                strengths=[
+                    "procedures — still has excellent hands",
+                    "genuinely interesting cases re-engage him",
+                    "efficient with straightforward presentations",
+                ],
+                blind_spots=[
+                    "misses emotional cues — patient is terrified, Jordan doesn't notice",
+                    "substance abuse presentations — doesn't dig",
+                    "follow-up planning — dispositions without aftercare",
+                ],
+                overconfident_in=[
+                    "routine cases — autopilots through them, misses the atypical one",
+                ],
+                underconfident_in=[],
+            ),
+            backstory=(
+                "Second year who was a star intern. Something broke about six "
+                "months ago — won't say what. Still technically competent but "
+                "running on autopilot. The nurses have noticed. His co-residents "
+                "cover for him. On a good day the old Jordan shows up and you "
+                "see what the fuss was about."
+            ),
+        ),
+
+        Resident(
+            id="adeyemi_sarah",
+            name="Sarah Adeyemi",
+            year=ResidentYear.PGY3,
+            personality=PersonalityArchetype.STEADY,
+            competency=ResidentCompetency(
+                strengths=[
+                    "clinical gestalt — knows when something is off before labs confirm",
+                    "builds patient rapport quickly and naturally",
+                    "consistent, reliable case management across acuity levels",
+                ],
+                blind_spots=[
+                    "won't push back if attending disagrees, even when she's right",
+                    "understates urgency — says 'I want to make sure' when she means 'this is bad'",
+                ],
+                overconfident_in=[],
+                underconfident_in=[
+                    "her own judgment — she's usually right but defers too easily",
+                ],
+            ),
+            backstory=(
+                "Third year. Quietly the best resident in the program but nobody "
+                "talks about it because she doesn't present dramatically. Grew up "
+                "in Houston, parents are both nurses. Medicine isn't glamorous to "
+                "her — it's a job she happens to be very good at. Trust builds "
+                "through accuracy, not charisma."
+            ),
+        ),
+
+        Resident(
+            id="kowalski_danny",
+            name="Danny Kowalski",
+            year=ResidentYear.PGY1,
+            personality=PersonalityArchetype.COWBOY,
+            competency=ResidentCompetency(
+                strengths=[
+                    "genuinely good hands — calm in chaos",
+                    "will do the thing nobody else wants to do",
+                    "fast triage reads on trauma and acute presentations",
+                ],
+                blind_spots=[
+                    "wide knowledge gaps he doesn't know about yet",
+                    "pediatric presentations — hasn't seen enough",
+                    "commits to a plan and executes before asking",
+                    "medication dosing on complex patients",
+                ],
+                overconfident_in=[
+                    "his own clinical read — PGY1 with PGY3 confidence",
+                ],
+                underconfident_in=[],
+            ),
+            backstory=(
+                "First year who acts like a third year. Former paramedic, "
+                "four years in the field before med school. Confident, fast, "
+                "sometimes right. Andre's speed with none of Andre's experience. "
+                "Gets quieter when he's wrong, which is how you know. "
+                "More dangerous than Priya because he'll actually do it."
+            ),
+        ),
     ]
+
+
+def select_shift_roster(
+    roster: list[Resident] | None = None,
+    num_residents: int = 3,
+) -> list[Resident]:
+    """
+    Pick num_residents from the full roster with PGY balance constraints:
+      - At least 1 junior (PGY1-2)
+      - At least 1 senior (PGY3+)
+    Shuffled so bay assignment is random each run.
+    """
+    import random as _rnd
+
+    if roster is None:
+        roster = make_default_roster()
+
+    if len(roster) <= num_residents:
+        picked = list(roster)
+        _rnd.shuffle(picked)
+        return picked
+
+    juniors = [r for r in roster if r.year.value <= 2]
+    seniors = [r for r in roster if r.year.value >= 3]
+
+    picked: list[Resident] = []
+
+    # Guarantee at least one junior
+    if juniors:
+        j = _rnd.choice(juniors)
+        picked.append(j)
+
+    # Guarantee at least one senior
+    available_seniors = [s for s in seniors if s not in picked]
+    if available_seniors:
+        s = _rnd.choice(available_seniors)
+        picked.append(s)
+
+    # Fill remaining slots from whoever's left
+    remaining = [r for r in roster if r not in picked]
+    need = num_residents - len(picked)
+    if need > 0 and remaining:
+        picked.extend(_rnd.sample(remaining, min(need, len(remaining))))
+
+    _rnd.shuffle(picked)
+    return picked

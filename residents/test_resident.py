@@ -20,7 +20,7 @@ import sys
 import argparse
 
 from cases.schema import GeneratedCase
-from .schema import make_default_roster
+from .schema import make_default_roster, select_shift_roster
 from .resident import ResidentAI
 
 

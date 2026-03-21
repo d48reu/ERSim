@@ -28,7 +28,7 @@ import sys
 import random
 import argparse
 from cases.schema import GeneratedCase
-from residents.schema import make_default_roster
+from residents.schema import select_shift_roster
 from .shift import Shift
 
 
@@ -72,8 +72,7 @@ def run(num_bays: int = 3, model: str = "anthropic/claude-haiku-4-5"):
         picks = random.sample(cases_raw, min(num_bays, len(cases_raw)))
 
     cases = [GeneratedCase.model_validate(c) for c in picks]
-    residents = make_default_roster()
-    random.shuffle(residents)  # Randomize who covers which acuity each shift
+    residents = select_shift_roster()  # Picks 3 of 6 with PGY balance
 
     shift = Shift(cases=cases, residents=residents, model=model)
     shift.setup()

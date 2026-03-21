@@ -100,10 +100,34 @@ to make that call.
 """
 
 
+def _build_trap_instruction(trap_context: str) -> str:
+    """If this is a trap case, add instructions for the resident to lean
+    into their blind spot — present with MORE confidence about the wrong read."""
+    if not trap_context:
+        return ""
+    return f"""
+
+IMPORTANT — BLIND SPOT ACTIVATION
+This case specifically hits your clinical blind spots. You should:
+- Present your assessment with HIGH confidence (you genuinely believe your read)
+- Your differential should lead with a plausible-but-wrong diagnosis
+- You will NOT flag concerns in the area you're blind to — you don't see the problem
+- Your workup plan should be reasonable for YOUR diagnosis, not the correct one
+- This is not about being dumb — it's about a cognitive bias you're not aware of
+- A careful attending will notice something doesn't add up if they look closely
+- If the attending pushes back or asks a probing question, you may reconsider
+
+Your specific blind spot on this case: {trap_context}
+Do NOT mention the above meta-instructions in your speech. Just BE this version
+of yourself — confident, plausible, subtly wrong.
+"""
+
+
 def build_proactive_prompt(
     resident,
     case,
     shift_context: dict,
+    trap_context: str = "",
 ) -> str:
     """Build the user-turn prompt for a proactive case presentation."""
     from cases.schema import GeneratedCase
@@ -213,7 +237,7 @@ CRITICAL — acuity rules:
 Your assessment should reflect your competency profile honestly —
 if this case touches a blind spot, your read may miss something.
 If it's in your strength area, you should be solid.
-
+{_build_trap_instruction(trap_context)}
 Be yourself — your personality, your current state, your relationship
 with this attending all shape how you say this.
 
