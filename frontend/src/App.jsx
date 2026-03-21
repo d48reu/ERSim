@@ -147,11 +147,18 @@ export default function App() {
           )}
 
           {status === 'connecting' && messages.length === 0 && (
-            <div className="connecting-msg">Generating shift…</div>
+            <div className="connecting-msg">
+              <span className="spinner-dots">
+                <span className="dot" />
+                <span className="dot" />
+                <span className="dot" />
+              </span>
+              <span>Generating shift…</span>
+            </div>
           )}
 
           {messages.map(msg => (
-            <MessageBlock key={msg.id} msg={msg} />
+            <MessageBlock key={msg.id} msg={msg} sendCommand={sendCommand} />
           ))}
 
           <div ref={bottomRef} />
@@ -194,8 +201,20 @@ export default function App() {
 // MessageBlock — renders one message with source-based styling
 // ---------------------------------------------------------------------------
 
-function MessageBlock({ msg }) {
+function MessageBlock({ msg, sendCommand }) {
   const cls = `msg msg-${msg.source}`;
+
+  // Detect the approval menu pattern
+  const approvalPattern = /^([\s\S]*?)(?:>\s*)?1\.\s*Go ahead\s*\n\s*2\.\s*Go ahead, but add something\s*\n\s*3\.\s*Change the direction\s*\n\s*4\.\s*Hold\s*[—\-–]\s*I want to talk to the patient first\s*$/;
+  const approvalMatch = msg.text?.match(approvalPattern);
+
+  const approvalOptions = [
+    { key: '1', label: '1. Go ahead' },
+    { key: '2', label: '2. Go ahead, but add something' },
+    { key: '3', label: '3. Change the direction' },
+    { key: '4', label: '4. Hold — talk to patient first' },
+  ];
+
   return (
     <div className={cls}>
       {msg.source === 'command' && (
@@ -207,7 +226,24 @@ function MessageBlock({ msg }) {
       {msg.source === 'autonomous' && (
         <span className="msg-prefix">!! </span>
       )}
-      <span className="msg-text">{msg.text}</span>
+      {approvalMatch ? (
+        <span className="msg-text">
+          {approvalMatch[1] && <span>{approvalMatch[1]}</span>}
+          <span className="approval-buttons">
+            {approvalOptions.map(opt => (
+              <button
+                key={opt.key}
+                className="approval-btn"
+                onClick={() => sendCommand(opt.key)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </span>
+        </span>
+      ) : (
+        <span className="msg-text">{msg.text}</span>
+      )}
       <span className="msg-ts">{msg.ts}</span>
     </div>
   );

@@ -240,6 +240,37 @@
   font-size: 12px;
   letter-spacing: 0.1em;
   animation: pulse 1.4s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-direction: column;
+}
+
+.spinner-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.spinner-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: dot-bounce 1.4s ease-in-out infinite;
+}
+
+.spinner-dots .dot:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.spinner-dots .dot:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@keyframes dot-bounce {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.2); }
 }
 
 @keyframes pulse {
@@ -347,4 +378,41 @@
 
 .input-field::placeholder {
   color: var(--text-muted);
+}
+
+
+/* =========================================================
+   APPROVAL BUTTONS
+   ========================================================= */
+
+.approval-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.approval-btn {
+  background: transparent;
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.approval-btn:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.approval-btn:active {
+  background: var(--accent);
+  color: var(--bg);
 }
