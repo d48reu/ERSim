@@ -80,6 +80,25 @@ async def process_command(session: GameSession, raw: str) -> None:
         result = await _bg(shift.approve_plan, 3, rest)
         await session.send_text(result, source="resident")
 
+    # Cross-bay decision response: "respond Bay 1 1" or "respond 2 1"
+    elif first == "respond" and len(parts) >= 3:
+        # Bay IDs are "Bay 1", "Bay 2", etc. — handle space in name
+        choice_str = parts[-1]  # Last part is always the choice
+        bay_parts = parts[1:-1]  # Everything between "respond" and choice
+        target_bay = " ".join(bay_parts)
+        # Normalize: "bay 1" -> "Bay 1", "1" -> "Bay 1"
+        if target_bay.lower().startswith("bay"):
+            target_bay = "Bay " + target_bay.split()[-1]
+        else:
+            target_bay = f"Bay {target_bay}"
+        try:
+            choice = int(choice_str)
+        except ValueError:
+            await session.send_text("Usage: respond <bay> <1|2>", source="system")
+            return
+        result = shift.respond_cross_bay(target_bay, choice)
+        await session.send_text(result, source="system")
+
     # ------------------------------------------------------------------
     # In-bay actions
     # ------------------------------------------------------------------
@@ -119,14 +138,15 @@ async def process_command(session: GameSession, raw: str) -> None:
         dispo = rest if rest else "discharge"
         result = await _bg(shift.resolve, dispo)
         await session.send_text(result, source="system")
-        # Auto-debrief when all bays resolved
+        # Auto-debrief when all bays resolved (guard against double-fire)
         all_resolved = all(
             b.status.value == "resolved" for b in shift.bays.values()
         )
-        if all_resolved:
+        if all_resolved and not getattr(shift, '_debrief_shown', False):
+            shift._debrief_shown = True
             debrief = shift.debrief()
             await session.send_text(debrief, source="system")
-            await session.send("shift_ended", {"summary": debrief})
+            await session.send("shift_ended", _shift_ended_payload(session, debrief))
 
     # ------------------------------------------------------------------
     # Meta
@@ -135,9 +155,11 @@ async def process_command(session: GameSession, raw: str) -> None:
         await session.send_text(HELP_TEXT, source="system")
 
     elif first in ("quit", "exit", "end"):
-        debrief = shift.debrief()
-        await session.send_text(debrief, source="system")
-        await session.send("shift_ended", {"summary": debrief})
+        if not getattr(shift, '_debrief_shown', False):
+            shift._debrief_shown = True
+            debrief = shift.debrief()
+            await session.send_text(debrief, source="system")
+            await session.send("shift_ended", _shift_ended_payload(session, debrief))
 
     else:
         # Free text = talk to patient (auto-talk when in a bay)
@@ -189,3 +211,15 @@ Commands:
 
 Free text = talk to the patient.
 """.strip()
+
+
+def _shift_ended_payload(session: GameSession, debrief: str) -> dict:
+    shift = session.shift
+    return {
+        "summary": debrief,
+        "feedback_context": {
+            "session_id": session.session_id,
+            "build_version": getattr(session, "build_version", "alpha-local"),
+            **getattr(shift, "_last_debrief_meta", {}),
+        },
+    }

@@ -4,19 +4,23 @@ Session manager — maps session_id to live Shift objects.
 In-memory for now. Redis would replace this for horizontal scaling.
 """
 
-import uuid
 import json
+import logging
 import os
-import sys
+import uuid
 from typing import Optional
+
 from fastapi import WebSocket
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from llm import get_model
 
+logger = logging.getLogger("ersim.session")
+
+from cases.demo_cases import CURATED_DEMO_CASE_IDS
 from cases.schema import GeneratedCase
 from residents.schema import select_shift_roster
 from shift.shift import Shift
+from .feedback_store import get_build_version
 
 
 # ---------------------------------------------------------------------------
@@ -24,7 +28,6 @@ from shift.shift import Shift
 # ---------------------------------------------------------------------------
 
 _sessions: dict[str, "GameSession"] = {}
-
 
 class GameSession:
     """One player's active game state."""
@@ -34,6 +37,8 @@ class GameSession:
         self.shift = shift
         self.websocket: Optional[WebSocket] = None
         self.setup_complete: bool = False
+        self.build_version: str = get_build_version()
+        self.shift_mode: str = "flagship"
 
     async def send(self, msg_type: str, payload: dict):
         """Push a message to the connected WebSocket client."""
@@ -44,7 +49,12 @@ class GameSession:
                     **payload,
                 })
             except Exception:
-                pass  # Client disconnected — handled elsewhere
+                logger.warning(
+                    "websocket send failed session=%s type=%s",
+                    self.session_id,
+                    msg_type,
+                    exc_info=True,
+                )
 
     async def send_text(self, text: str, source: str = "system"):
         """Convenience: push a plain text message."""
@@ -66,27 +76,35 @@ def create_session(num_bays: int = 3, model: str | None = None) -> GameSession:
     if len(cases_raw) < num_bays:
         num_bays = len(cases_raw)
 
-    # Bucket by acuity, randomly sample for variety
-    by_acuity: dict[int, list] = {}
-    for c in cases_raw:
-        a = c["presenting_layer"]["acuity"]
-        by_acuity.setdefault(a, []).append(c)
+    curated_demo_enabled = os.environ.get("ERSIM_CURATED_DEMO", "1").lower() not in {
+        "0", "false", "no",
+    }
 
-    if num_bays == 3 and len(cases_raw) >= num_bays:
-        high  = by_acuity.get(1, []) + by_acuity.get(2, [])
-        mid   = by_acuity.get(3, [])
-        low   = by_acuity.get(4, []) + by_acuity.get(5, [])
-        picks = []
-        for bucket in [high, mid, low]:
-            if bucket:
-                picks.append(random.choice(bucket))
-        remaining = [c for c in cases_raw if c not in picks]
-        while len(picks) < num_bays and remaining:
-            pick = random.choice(remaining)
-            picks.append(pick)
-            remaining.remove(pick)
+    if curated_demo_enabled and num_bays == 3 and len(cases_raw) >= num_bays:
+        by_id = {c["case_id"]: c for c in cases_raw}
+        picks = [by_id[cid] for cid in CURATED_DEMO_CASE_IDS if cid in by_id]
     else:
-        picks = random.sample(cases_raw, min(num_bays, len(cases_raw)))
+        # Bucket by acuity, randomly sample for variety
+        by_acuity: dict[int, list] = {}
+        for c in cases_raw:
+            a = c["presenting_layer"]["acuity"]
+            by_acuity.setdefault(a, []).append(c)
+
+        if num_bays == 3 and len(cases_raw) >= num_bays:
+            high  = by_acuity.get(1, []) + by_acuity.get(2, [])
+            mid   = by_acuity.get(3, [])
+            low   = by_acuity.get(4, []) + by_acuity.get(5, [])
+            picks = []
+            for bucket in [high, mid, low]:
+                if bucket:
+                    picks.append(random.choice(bucket))
+            remaining = [c for c in cases_raw if c not in picks]
+            while len(picks) < num_bays and remaining:
+                pick = random.choice(remaining)
+                picks.append(pick)
+                remaining.remove(pick)
+        else:
+            picks = random.sample(cases_raw, min(num_bays, len(cases_raw)))
 
     cases = [GeneratedCase.model_validate(c) for c in picks]
     residents = select_shift_roster()

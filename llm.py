@@ -85,7 +85,7 @@ def get_model(purpose: str = "gameplay", override: str | None = None, backend: s
 _client_cache: dict[str, OpenAI] = {}
 
 
-def get_client(backend: str | None = None) -> OpenAI:
+def get_client(backend: str | None = None, use_cache: bool = True) -> OpenAI:
     """
     Get an OpenAI-compatible client for the active backend.
 
@@ -94,7 +94,7 @@ def get_client(backend: str | None = None) -> OpenAI:
     """
     be = _detect_backend(backend)
 
-    if be in _client_cache:
+    if use_cache and be in _client_cache:
         return _client_cache[be]
 
     if be == "ollama":
@@ -125,7 +125,8 @@ def get_client(backend: str | None = None) -> OpenAI:
             base_url="https://openrouter.ai/api/v1",
         )
 
-    _client_cache[be] = client
+    if use_cache:
+        _client_cache[be] = client
     return client
 
 

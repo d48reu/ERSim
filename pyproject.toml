@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ersim"
+version = "0.1.0"
+description = "Emergency room attending simulator (ERSim)"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi==0.135.1",
+    "openai==2.29.0",
+    "pydantic==2.12.5",
+    "uvicorn[standard]==0.42.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.setuptools]
+packages = ["api", "shift", "cases", "residents"]
+py-modules = ["llm"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"

@@ -130,13 +130,24 @@ def build_proactive_prompt(
     trap_context: str = "",
 ) -> str:
     """Build the user-turn prompt for a proactive case presentation."""
-    from cases.schema import GeneratedCase
+    from cases.demo_cases import get_demo_case_meta
     pl = case.presenting_layer
-    mt = case.medical_truth
 
     personality_voice = PERSONALITY_VOICES.get(
         resident.personality.value, ""
     )
+    demo_meta = get_demo_case_meta(case.case_id)
+    demo_section = ""
+    if demo_meta.get("setup_focus"):
+        demo_section = f"""
+
+FLAGSHIP DEMO CONTEXT
+---------------------
+This case is part of the public flagship demo build.
+Keep the opening especially readable for a first-time tester.
+Lead with the most decision-relevant clue, avoid filler, and make the tension legible.
+Demo focus: {demo_meta['setup_focus']}
+"""
 
     state = resident.state
     rel = resident.relationship
@@ -237,6 +248,7 @@ CRITICAL — acuity rules:
 Your assessment should reflect your competency profile honestly —
 if this case touches a blind spot, your read may miss something.
 If it's in your strength area, you should be solid.
+{demo_section}
 {_build_trap_instruction(trap_context)}
 Be yourself — your personality, your current state, your relationship
 with this attending all shape how you say this.
@@ -250,7 +262,7 @@ No explanation before or after. No markdown. Raw JSON only.
   "reasoning": "your internal clinical reasoning — what the vitals/triage tell you, what you're worried about, what you might be missing",
   "confidence": "low|moderate|high",
   "flags": ["urgent concern 1", "concern 2"],
-  "what_they_say": "your actual words to the attending — natural hallway speech in your voice. For acuity 1-2: state your read FIRST ('looks like X because Y'), then your plan, then ask approval. End with a direct question: 'Good to go?' or 'Want me to run with this?'",
+  "what_they_say": "your actual words to the attending — natural hallway speech in your voice. Keep it tight: usually 3-5 sentences, max about 120 words. Lead with the read, include only the most decision-relevant evidence, then the plan, then ask approval. For acuity 1-2: state your read FIRST ('looks like X because Y'), then your plan, then ask approval. End with a direct question: 'Good to go?' or 'Want me to run with this?'",
   "plan_summary": "one sentence: what you want to do — tests and questions combined",
   "plan_tests": ["exact test name 1", "exact test name 2"],
   "plan_questions": ["question to ask patient 1", "question to ask patient 2"]
@@ -278,6 +290,14 @@ Your answer reflects:
 
 If you don't know something, say so in the way your personality
 would say it — not a generic "I'm not sure."
+
+You are already in an ongoing case. Do not say this is the first time
+you are presenting the patient unless the interaction summary explicitly
+says no one has discussed the case yet.
+
+Do not imply a test or order has already been placed unless the
+interaction summary says it was actually ordered. If you want something
+new, frame it as a recommendation or next step, not as already done.
 
 If the attending's question is pointing at something you missed,
 your reaction depends on your personality. The cowboy gets

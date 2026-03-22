@@ -32,8 +32,8 @@ from residents.schema import select_shift_roster
 from .shift import Shift
 
 
-def run(num_bays: int = 3, model: str = "anthropic/claude-haiku-4-5"):
-    # Load cases
+def _load_legacy_cases(num_bays: int) -> list[GeneratedCase]:
+    """Load cases from pre-generated test_output.json (legacy mode)."""
     try:
         with open("test_output.json") as f:
             data = json.load(f)
@@ -46,14 +46,12 @@ def run(num_bays: int = 3, model: str = "anthropic/claude-haiku-4-5"):
         num_bays = len(cases_raw)
 
     # Pick a mix of acuity levels for an interesting session
-    # Bucket by acuity, randomly sample from each bucket for variety
     by_acuity: dict[int, list] = {}
     for c in cases_raw:
         a = c["presenting_layer"]["acuity"]
         by_acuity.setdefault(a, []).append(c)
 
     if num_bays == 3 and len(cases_raw) >= num_bays:
-        # Always aim for one high (1-2), one mid (3), one lower (4-5)
         high   = by_acuity.get(1, []) + by_acuity.get(2, [])
         mid    = by_acuity.get(3, [])
         low    = by_acuity.get(4, []) + by_acuity.get(5, [])
@@ -62,7 +60,6 @@ def run(num_bays: int = 3, model: str = "anthropic/claude-haiku-4-5"):
         for bucket in pool:
             if bucket:
                 picks.append(random.choice(bucket))
-        # Pad with random leftovers if a bucket was empty
         remaining = [c for c in cases_raw if c not in picks]
         while len(picks) < num_bays and remaining:
             pick = random.choice(remaining)
@@ -71,7 +68,46 @@ def run(num_bays: int = 3, model: str = "anthropic/claude-haiku-4-5"):
     else:
         picks = random.sample(cases_raw, min(num_bays, len(cases_raw)))
 
-    cases = [GeneratedCase.model_validate(c) for c in picks]
+    return [GeneratedCase.model_validate(c) for c in picks]
+
+
+def _generate_template_cases(num_bays: int, model: str) -> list[GeneratedCase]:
+    """Generate fresh cases from the template bank (new default)."""
+    from cases.generator import generate_shift_cases_from_templates
+
+    shift_context = {
+        "day_of_week": random.choice([
+            "Monday", "Tuesday", "Wednesday", "Thursday",
+            "Friday", "Saturday", "Sunday",
+        ]),
+        "shift_type": random.choice(["day", "evening", "night"]),
+        "season": random.choice(["spring", "summer", "fall", "winter"]),
+        "weeks_into_campaign": 1,
+        "recent_outcomes": [],
+    }
+
+    print(f"Generating {num_bays} cases from template bank...")
+    pool = generate_shift_cases_from_templates(
+        num_cases=num_bays,
+        shift_context=shift_context,
+        model=model,
+    )
+    return pool.cases
+
+
+def run(num_bays: int = 3, model: str = "anthropic/claude-haiku-4-5",
+        legacy: bool = False):
+    # Load or generate cases
+    if legacy:
+        print("Using legacy mode: loading from test_output.json")
+        cases = _load_legacy_cases(num_bays)
+    else:
+        cases = _generate_template_cases(num_bays, model)
+
+    if not cases:
+        print("No cases available. Exiting.")
+        sys.exit(1)
+
     residents = select_shift_roster()  # Picks 3 of 6 with PGY balance
 
     shift = Shift(cases=cases, residents=residents, model=model)
@@ -84,6 +120,11 @@ def run(num_bays: int = 3, model: str = "anthropic/claude-haiku-4-5"):
         results = shift.check_pending_results()
         for r in results:
             print(f"\n  ** RESULT IN:\n{r}\n")
+
+        # Show any warning notifications
+        warnings = shift.check_warning_notifications()
+        for w in warnings:
+            print(f"\n  ⚠ WARNING:\n{w}\n")
 
         # Show any autonomous action notifications
         notes = shift.check_autonomous_notifications()
@@ -233,5 +274,8 @@ if __name__ == "__main__":
                         help="Number of simultaneous bays (default: 3)")
     parser.add_argument("--model", type=str,
                         default="anthropic/claude-haiku-4-5")
+    parser.add_argument("--legacy", action="store_true",
+                        help="Use legacy mode: load from test_output.json "
+                             "instead of generating from template bank")
     args = parser.parse_args()
-    run(num_bays=args.bays, model=args.model)
+    run(num_bays=args.bays, model=args.model, legacy=args.legacy)

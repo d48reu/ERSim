@@ -13,12 +13,10 @@ personality archetype, current state, relationship with attending.
 import json
 import os
 import re
-import sys
 from typing import Optional
 
 from openai import OpenAI
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from llm import get_client, get_model
 
 from .schema import (
@@ -46,6 +44,96 @@ def _clean_json(raw: str) -> str:
     return raw.strip()
 
 
+def _extract_json_object(raw: str) -> Optional[str]:
+    """Find the first {...} block in the response, handling nested braces."""
+    start = raw.find('{')
+    if start == -1:
+        return None
+    depth = 0
+    for i in range(start, len(raw)):
+        if raw[i] == '{':
+            depth += 1
+        elif raw[i] == '}':
+            depth -= 1
+            if depth == 0:
+                return raw[start:i + 1]
+    return None
+
+
+def _regex_extract(raw: str) -> dict:
+    """
+    Last-resort field extraction for malformed JSON.
+    Pulls key-value pairs via regex -- handles the common Haiku failure
+    modes: trailing commas, unquoted keys, explanation text around JSON.
+    """
+    result = {}
+
+    # String fields: "key": "value" or "key": 'value'
+    for m in re.finditer(r'"(\w+)"\s*:\s*"((?:[^"\\]|\\.)*)"', raw):
+        result[m.group(1)] = m.group(2)
+
+    # Boolean fields: "key": true/false
+    for m in re.finditer(r'"(\w+)"\s*:\s*(true|false)', raw, re.IGNORECASE):
+        result[m.group(1)] = m.group(2).lower() == 'true'
+
+    # Number fields: "key": 123
+    for m in re.finditer(r'"(\w+)"\s*:\s*(\d+)(?!\.\d)', raw):
+        if m.group(1) not in result:
+            result[m.group(1)] = int(m.group(2))
+
+    # Array fields: "key": ["a", "b"] -- grab the raw array and try parsing
+    for m in re.finditer(r'"(\w+)"\s*:\s*(\[.*?\])', raw, re.DOTALL):
+        if m.group(1) not in result:
+            try:
+                result[m.group(1)] = json.loads(m.group(2))
+            except (json.JSONDecodeError, ValueError):
+                # Try to extract string items at minimum
+                items = re.findall(r'"((?:[^"\\]|\\.)*)"', m.group(2))
+                if items:
+                    result[m.group(1)] = items
+
+    return result
+
+
+def _parse_response(raw: str) -> dict:
+    """
+    Multi-strategy JSON parser. Tries in order:
+    1. Direct json.loads after cleaning markdown fences
+    2. Extract first {...} block and parse that
+    3. Regex field extraction as last resort
+    """
+    # Strategy 1: clean parse
+    cleaned = _clean_json(raw)
+    try:
+        return json.loads(cleaned)
+    except (json.JSONDecodeError, ValueError):
+        pass
+
+    # Strategy 2: find the JSON object in surrounding text
+    obj_str = _extract_json_object(raw)
+    if obj_str:
+        try:
+            return json.loads(obj_str)
+        except (json.JSONDecodeError, ValueError):
+            pass
+        # Try fixing common issues: trailing commas
+        fixed = re.sub(r',\s*([}\]])', r'\1', obj_str)
+        try:
+            return json.loads(fixed)
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # Strategy 3: regex extraction -- better than nothing
+    result = _regex_extract(raw)
+    if result:
+        import sys
+        print(f"[WARN] JSON parse failed, regex extracted {len(result)} fields", file=sys.stderr)
+        return result
+
+    # Total failure
+    raise json.JSONDecodeError("All parse strategies failed", raw, 0)
+
+
 def _call(
     client: OpenAI,
     system: str,
@@ -63,7 +151,7 @@ def _call(
         ],
     )
     raw = response.choices[0].message.content
-    return json.loads(_clean_json(raw))
+    return _parse_response(raw)
 
 
 class ResidentAI:
@@ -76,10 +164,11 @@ class ResidentAI:
         self,
         resident: Resident,
         model: str = "anthropic/claude-haiku-4-5",
+        client: Optional[OpenAI] = None,
     ):
         self.resident = resident
         self.model = get_model("gameplay", override=model)
-        self.client = get_client()
+        self.client = client or get_client()
         self._shift_context: dict = {}
 
     def set_shift_context(self, context: dict):
@@ -371,3 +460,26 @@ class ResidentAI:
         self.resident.state.had_break = False
         self.resident.state.recent_mistake = None
         self.resident.state.consecutive_difficult_cases = 0
+
+
+def build_initial_resident_state(
+    resident: Resident,
+    case,
+    model: str,
+    shift_context: dict,
+    trap_context: str = "",
+) -> tuple[ResidentAI, ResidentAssessment]:
+    """
+    Build the resident AI plus its initial proactive opening.
+
+    Setup runs these in parallel, so we avoid the shared client cache and
+    give each worker its own client instance.
+    """
+    resident_ai = ResidentAI(
+        resident,
+        model=model,
+        client=get_client(use_cache=False),
+    )
+    resident_ai.set_shift_context(shift_context)
+    assessment = resident_ai.proactive(case, trap_context=trap_context)
+    return resident_ai, assessment

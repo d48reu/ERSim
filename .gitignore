@@ -31,3 +31,6 @@ playtest_v2_results.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Art — keep images/docs; never commit installers dropped in folder
+art/**/*.exe

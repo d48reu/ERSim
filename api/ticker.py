@@ -6,7 +6,11 @@ Runs as an asyncio task. Fires every 3 seconds.
 """
 
 import asyncio
+import logging
+
 from . import session as session_store
+
+logger = logging.getLogger("ersim.ticker")
 
 
 async def tick_loop():
@@ -24,19 +28,38 @@ async def tick_loop():
             try:
                 await _tick_session(session)
             except Exception:
-                pass  # Don't let one broken session kill the loop
+                logger.exception(
+                    "tick failed for session=%s; continuing loop",
+                    session_id,
+                )
 
 
 async def _tick_session(session):
     """Check a single session for pending events and push them."""
     shift = session.shift
 
-    # Test results due
-    results = shift.check_pending_results()
-    for r in results:
+    # Test results due — now returns {notifications, decisions}
+    pending = shift.check_pending_results()
+    for r in pending.get("notifications", []):
         await session.send("result", {
             "text": r,
             "source": "result",
+        })
+    for d in pending.get("decisions", []):
+        await session.send("cross_bay_decision", {
+            "bay_id": d["bay_id"],
+            "resident_name": d["resident_name"],
+            "patient_name": d["patient_name"],
+            "text": d["text"],
+            "options": d["options"],
+        })
+
+    # Warning notifications (resident getting antsy)
+    warnings = shift.check_warning_notifications()
+    for w in warnings:
+        await session.send("warning", {
+            "text": w,
+            "source": "resident",
         })
 
     # Autonomous resident actions

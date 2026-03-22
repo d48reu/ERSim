@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: ersim-alpha
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: ERSIM_CURATED_DEMO
+        value: "1"
+      - key: ERSIM_FEEDBACK_DB
+        value: /data/ersim_feedback.db
+      - key: ERSIM_BUILD_VERSION
+        value: alpha-share-v1
+      - key: ERSIM_BACKEND
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: ERSIM_MODEL
+        sync: false
+      - key: ERSIM_GEN_MODEL
+        sync: false
+      - key: ERSIM_FEEDBACK_EXPORT_TOKEN
+        sync: false
+      # Optional: explicit browser origins if the UI is not same-origin
+      - key: ERSIM_CORS_ORIGINS
+        sync: false
+    disk:
+      name: ersim-data
+      mountPath: /data
+      sizeGB: 1

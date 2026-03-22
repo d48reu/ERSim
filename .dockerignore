@@ -1,0 +1,14 @@
+.git
+.github
+.venv
+venv
+__pycache__
+*.pyc
+*.egg-info
+frontend/node_modules
+tests
+# Local experiment outputs (not needed in image)
+run*_output.txt
+playtest_*.txt
+playtest_*.json
+playtest_*.py

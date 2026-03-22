@@ -11,14 +11,18 @@ A Bay owns:
 The timer ticks every time the attending takes ANY action
 in ANY bay. When it hits the threshold the resident acts.
 
+A WARNING fires at 75% of threshold (rounded up) to give the
+attending a chance to intervene before autonomous action.
+
 Timer threshold varies by acuity:
-  Acuity 1: 3 actions  (immediate — don't leave this one alone)
-  Acuity 2: 5 actions
-  Acuity 3: 8 actions
-  Acuity 4: 12 actions
-  Acuity 5: 20 actions (non-urgent — resident can hold this forever)
+  Acuity 1: 5 actions  (immediate — don't leave this one alone)
+  Acuity 2: 7 actions
+  Acuity 3: 11 actions
+  Acuity 4: 16 actions
+  Acuity 5: 28 actions (non-urgent — resident can hold this a while)
 """
 
+import math
 from dataclasses import dataclass, field
 from typing import Optional, Literal
 from enum import Enum
@@ -38,11 +42,11 @@ class BayStatus(str, Enum):
 
 
 ACUITY_TIMER_THRESHOLDS = {
-    1: 3,
-    2: 5,
-    3: 8,
-    4: 12,
-    5: 20,
+    1: 5,
+    2: 9,
+    3: 11,
+    4: 16,
+    5: 28,
 }
 
 
@@ -71,6 +75,7 @@ class Bay:
     status: BayStatus = BayStatus.WAITING
     timer_ticks: int = 0
     timer_threshold: int = 8
+    warning_fired: bool = False
     autonomous_fired: bool = False
 
     events: list = field(default_factory=list)
@@ -86,6 +91,9 @@ class Bay:
     # Trap case — resident's blind spots align with this case's miss reason
     is_trap: bool = False
     trap_detail: str = ""  # Why this is a trap for THIS resident
+
+    # Consequence severity from autonomous action (none/minor/moderate/major/critical)
+    autonomous_consequence_severity: str = "none"
 
     # Approval system state
     _pending_plan: Optional[object] = None   # ResidentAssessment with plan fields
@@ -104,20 +112,31 @@ class Bay:
         self.patient_session = PatientSession(self.case, model=model)
         self.resident_ai = ResidentAI(self.resident, model=model)
 
-    def tick(self) -> bool:
+    @property
+    def warning_threshold(self) -> int:
+        """Warning fires at 75% of timer_threshold, rounded up."""
+        return math.ceil(self.timer_threshold * 0.75)
+
+    def tick(self) -> str:
         """
         Advance timer by one tick.
-        Returns True if autonomous action threshold just crossed.
+        Returns:
+          'fire'    — autonomous action threshold just crossed
+          'warning' — warning threshold just crossed (75% of timer)
+          'ok'      — nothing special
         Timer pauses when attending is present and plan is on hold.
         """
         if self.status == BayStatus.SUPERVISED:
             # Don't tick if attending is actively deciding (hold)
             if self._plan_on_hold:
-                return False
+                return 'ok'
             self.timer_ticks += 1
             if self.timer_ticks >= self.timer_threshold and not self.autonomous_fired:
-                return True
-        return False
+                return 'fire'
+            if self.timer_ticks >= self.warning_threshold and not self.warning_fired:
+                self.warning_fired = True
+                return 'warning'
+        return 'ok'
 
     def record(self, actor, event_type, content, internal=""):
         self.events.append(BayEvent(

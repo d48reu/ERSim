@@ -18,16 +18,18 @@ Usage:
     summary = session.get_reveal_summary()
 """
 
+import json
+import logging
 import os
 import re
-import sys
 from dataclasses import dataclass, field
 from typing import Optional
 
 from openai import OpenAI
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from llm import get_client, get_model
+
+logger = logging.getLogger("ersim.triggers")
 
 from .schema import GeneratedCase, RevealTrigger
 
@@ -147,6 +149,26 @@ Example:
 
 Do not use italics for emotion labels. "looks nervous" is
 not an action. "looks at hands" is.
+
+ANTI-REPETITION
+
+If your last 2-3 responses used an italicized gesture action, do NOT
+use one this turn. Vary between: speaking with texture in the words
+themselves, silence that communicates something, answering a question
+the attending didn't quite ask, or a single physical gesture you
+haven't used yet.
+
+If the attending keeps asking open-ended questions and you've already
+answered the obvious ones, start bringing in life details from your
+ground truth — your job, your living situation, the person in the
+waiting room, what you were doing before you came in, something that
+happened this week. These are natural things real patients mention
+when they're sitting in an ER with time to fill. They are not medical
+reveals — they are human texture.
+
+Never produce a response that is ONLY a stage direction with no speech.
+Even a quiet patient says something, even if it's "I don't know" or
+"Can I get some water?" or a non-answer that reveals their state of mind.
 """
 
 
@@ -230,6 +252,7 @@ class PatientSession:
             for i in range(len(case.reveal_sequence))
         ]
         self.ordered_tests: list[str] = []
+        self._test_result_cache: dict[str, str] = {}
         self.family_present: bool = False
         self.turn_count: int = 0
 
@@ -268,19 +291,23 @@ class PatientSession:
         (not the patient talking — this is the game engine).
         Triggers any test_result reveal nodes for this test.
         """
-        self.ordered_tests.append(test_name)
-        triggered = self._check_test_triggers(test_name)
+        canonical = self._canonical_test_name(test_name)
+        if canonical not in self.ordered_tests:
+            self.ordered_tests.append(canonical)
+        triggered = self._check_test_triggers(canonical)
 
         # Return what the test shows, drawn from medical truth
-        result = self._get_test_result(test_name)
+        if canonical not in self._test_result_cache:
+            self._test_result_cache[canonical] = self._get_test_result(canonical)
+        result = self._test_result_cache[canonical]
 
-        status = f"[Test ordered: {test_name}]\n{result}"
+        status = f"[Test ordered: {canonical}]\n{result}"
         if triggered:
             status += f"\n[Reveal unlocked: patient will now disclose related information]"
 
         self.history.append(InteractionTurn(
             role="system",
-            content=f"Test ordered: {test_name}. Result: {result}",
+            content=f"Test ordered: {canonical}. Result: {result}",
         ))
 
         return status
@@ -353,9 +380,11 @@ class PatientSession:
                     "trigger": node.trigger.value,
                 })
             else:
+                # Generate player-facing hints instead of raw trigger data
+                hint_type, hint_text = self._player_hint(node)
                 locked.append({
-                    "trigger_needed": node.trigger.value,
-                    "trigger_detail": node.trigger_detail,
+                    "trigger_needed": hint_type,
+                    "trigger_detail": hint_text,
                 })
 
         return {
@@ -366,6 +395,110 @@ class PatientSession:
             "tests_ordered": self.ordered_tests,
             "family_present": self.family_present,
         }
+
+    # ------------------------------------------------------------------
+    # Player-facing hint generation
+    # ------------------------------------------------------------------
+
+    _TEST_NAME_ALIASES = {
+        "electrocardiogram": "ecg",
+        "electrocardiography": "ecg",
+        "ekg": "ecg",
+        "12-lead ekg": "ecg",
+        "12-lead ecg": "ecg",
+        "chest xray": "chest x-ray",
+        "portable chest x-ray": "chest x-ray",
+        "chest radiograph": "chest x-ray",
+        "xray": "x-ray",
+        "complete blood count": "cbc",
+        "complete blood count with differential": "cbc",
+        "cbc with differential": "cbc",
+        "basic metabolic panel": "bmp",
+        "comprehensive metabolic panel": "cmp",
+        "d dimer": "d-dimer",
+        "free thyroxine": "free t4",
+        "thyroid function tests": "tsh",
+        "urine drug screen": "urine drug screen",
+        "pt/inr and ptt": "coagulation studies",
+        "coags": "coagulation studies",
+    }
+
+    def _canonical_test_name(self, test_name: str) -> str:
+        lowered = re.sub(r"\s+", " ", test_name.strip().lower())
+        return self._TEST_NAME_ALIASES.get(lowered, lowered)
+
+    _EXAM_HINT_KEYWORDS = {
+        "exam", "palpat", "auscult", "percuss", "inspect",
+        "lymph", "node", "finding", "perform",
+        "lymphadenopathy", "hepatosplenomegaly", "edema",
+        "tenderness", "mass", "murmur",
+    }
+
+    def _player_hint(self, node) -> tuple[str, str]:
+        """
+        Convert raw trigger data into actionable player-facing hints.
+        Returns (hint_type, hint_text).
+        """
+        trigger = node.trigger.value
+        detail = node.trigger_detail
+
+        # trust_established: don't show the impossible-to-guess condition
+        if node.trigger == RevealTrigger.TRUST_ESTABLISHED:
+            return ("spend_time", "Keep talking to the patient — don't rush")
+
+        # direct_question that describes an exam → show as physical_exam
+        if node.trigger == RevealTrigger.DIRECT_QUESTION:
+            detail_lower = detail.lower()
+            if any(kw in detail_lower for kw in self._EXAM_HINT_KEYWORDS):
+                # Extract the body area from the detail for the hint
+                area_hints = []
+                for cluster in self._EXAM_SYNONYMS:
+                    if any(word in detail_lower for word in cluster):
+                        # Pick the most common/readable word from the cluster
+                        readable = sorted(cluster, key=len)[1] if len(cluster) > 1 else list(cluster)[0]
+                        area_hints.append(readable)
+                        break
+                if area_hints:
+                    return ("physical_exam", f"Try examining: {area_hints[0]}")
+                return ("physical_exam", "A physical exam may reveal something")
+
+        # prolonged_stay
+        if node.trigger == RevealTrigger.PROLONGED_STAY:
+            return ("spend_time", "Patient may open up after more time passes")
+
+        # volunteered
+        if node.trigger == RevealTrigger.VOLUNTEERED:
+            return ("spend_time", "Patient volunteers this after a few interactions")
+
+        # family_present — this one is clear enough
+        if node.trigger == RevealTrigger.FAMILY_PRESENT:
+            return ("family", "Bring the family member into the room")
+
+        # test_result — already clear
+        if node.trigger == RevealTrigger.TEST_RESULT:
+            return ("test_result", detail)
+
+        # physical_exam — already clear
+        if node.trigger == RevealTrigger.PHYSICAL_EXAM:
+            return ("physical_exam", detail)
+
+        # direct_question (non-exam) — make it more actionable
+        if node.trigger == RevealTrigger.DIRECT_QUESTION:
+            detail_lower = detail.lower()
+            if "alcohol" in detail_lower or "drink" in detail_lower:
+                return ("ask_patient", "Ask directly about recent drinking or alcohol use")
+            if "who is at home" in detail_lower or "who needs to be called" in detail_lower:
+                return ("ask_patient", "Ask who is at home or who should be called")
+            if "drive" in detail_lower or "incident" in detail_lower or "swerve" in detail_lower:
+                return ("ask_patient", "Ask exactly what happened during the drive")
+            if "productive" in detail_lower or "cough" in detail_lower or "when exactly" in detail_lower:
+                return ("ask_patient", "Ask for a more exact cough timeline and whether it became productive")
+            if "risk factors" in detail_lower or "hiv" in detail_lower or "tb" in detail_lower:
+                return ("ask_patient", "Ask directly about infection risk factors or immune compromise")
+            return ("ask_patient", f"Ask directly about: {detail}")
+
+        # Fallback
+        return (trigger, detail)
 
     # ------------------------------------------------------------------
     # Internal: trigger checking
@@ -410,7 +543,8 @@ class PatientSession:
         return any_triggered
 
     def _check_exam_triggers(self, maneuver: str) -> bool:
-        """Check physical_exam triggers matching the maneuver."""
+        """Check physical_exam triggers AND direct_question nodes
+        whose trigger_detail describes an exam finding."""
         any_triggered = False
         for state in self.reveal_states:
             if state.triggered:
@@ -418,6 +552,22 @@ class PatientSession:
             node = self.case.reveal_sequence[state.node_index]
             if node.trigger == RevealTrigger.PHYSICAL_EXAM:
                 if self._exam_words_match(maneuver, node.trigger_detail):
+                    state.triggered = True
+                    state.turn_triggered = self.turn_count
+                    any_triggered = True
+            # B2 fix: direct_question nodes that describe exam findings
+            # should also unlock when the matching exam is performed
+            elif node.trigger == RevealTrigger.DIRECT_QUESTION:
+                detail_lower = node.trigger_detail.lower()
+                exam_keywords = {
+                    "exam", "palpat", "auscult", "percuss", "inspect",
+                    "lymph", "node", "finding", "perform", "abdomen",
+                    "chest", "lung", "cardiac", "neuro", "skin", "rash",
+                    "lymphadenopathy", "hepatosplenomegaly", "edema",
+                    "tenderness", "mass", "murmur",
+                }
+                has_exam_language = any(kw in detail_lower for kw in exam_keywords)
+                if has_exam_language and self._exam_words_match(maneuver, node.trigger_detail):
                     state.triggered = True
                     state.turn_triggered = self.turn_count
                     any_triggered = True
@@ -523,6 +673,93 @@ class PatientSession:
                 any_triggered = True
         return any_triggered
 
+    @staticmethod
+    def _robust_json_parse(raw: str) -> dict:
+        """Parse JSON robustly, handling common LLM response quirks.
+
+        Handles: markdown fences, trailing commas, Python bool literals
+        (True/False), and partial JSON fragments.
+        """
+        # Strip markdown code fences
+        cleaned = re.sub(r'^```(?:json)?\s*', '', raw.strip())
+        cleaned = re.sub(r'\s*```$', '', cleaned)
+
+        # Try direct parse first
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            pass
+
+        # Fix Python-style booleans (True/False → true/false)
+        fixed = re.sub(r'\bTrue\b', 'true', cleaned)
+        fixed = re.sub(r'\bFalse\b', 'false', fixed)
+        try:
+            return json.loads(fixed)
+        except json.JSONDecodeError:
+            pass
+
+        # Remove trailing commas before closing braces/brackets
+        fixed2 = re.sub(r',\s*([}\]])', r'\1', fixed)
+        try:
+            return json.loads(fixed2)
+        except json.JSONDecodeError:
+            pass
+
+        # Try to extract a JSON object from surrounding text
+        m = re.search(r'\{[^}]*"triggered"\s*:\s*(true|false)[^}]*\}', fixed2, re.IGNORECASE)
+        if m:
+            try:
+                return json.loads(m.group(0))
+            except json.JSONDecodeError:
+                pass
+
+        # Last resort: look for the word true/false after "triggered"
+        m = re.search(r'"?triggered"?\s*[:=]\s*(true|false)', fixed2, re.IGNORECASE)
+        if m:
+            return {"triggered": m.group(1).lower() == "true"}
+
+        raise json.JSONDecodeError("Could not extract triggered value", raw, 0)
+
+    @staticmethod
+    def _keyword_fallback(attending_message: str, trigger_detail: str) -> bool:
+        """Keyword-based fallback for trigger evaluation.
+
+        Checks both individual words and 2-word phrases from the
+        trigger_detail against the attending message.
+        """
+        _STOPWORDS = {
+            "the", "a", "an", "is", "are", "was", "were", "has", "have",
+            "do", "did", "how", "what", "when", "where", "why", "who",
+            "long", "been", "you", "your", "i", "it", "in", "of", "to",
+            "and", "or", "for", "that", "this", "with", "about",
+        }
+
+        def _clean(s):
+            return re.sub(r"[^\w\s]", "", s.lower())
+
+        msg_clean = _clean(attending_message)
+        detail_clean = _clean(trigger_detail)
+
+        msg_words = set(msg_clean.split())
+        detail_words = set(detail_clean.split())
+
+        # Single-word overlap (excluding stopwords)
+        overlap = (msg_words & detail_words) - _STOPWORDS
+        if overlap:
+            return True
+
+        # 2-word phrase matching from trigger_detail against message
+        detail_word_list = detail_clean.split()
+        for i in range(len(detail_word_list) - 1):
+            bigram = f"{detail_word_list[i]} {detail_word_list[i+1]}"
+            # Skip if both words are stopwords
+            if detail_word_list[i] in _STOPWORDS and detail_word_list[i+1] in _STOPWORDS:
+                continue
+            if bigram in msg_clean:
+                return True
+
+        return False
+
     def _evaluate_trigger(self, node, attending_message: str) -> bool:
         """
         Use the LLM to evaluate whether a conversational trigger
@@ -530,26 +767,46 @@ class PatientSession:
         """
         # VOLUNTEERED: check if enough turns have passed
         if node.trigger == RevealTrigger.VOLUNTEERED:
+            logger.debug("VOLUNTEERED trigger: turn_count=%d, threshold=3", self.turn_count)
             return self.turn_count >= 3
 
         # PROLONGED_STAY: check turn count as proxy for time
         if node.trigger == RevealTrigger.PROLONGED_STAY:
+            logger.debug("PROLONGED_STAY trigger: turn_count=%d, threshold=8", self.turn_count)
             return self.turn_count >= 8
 
-        # TRUST_ESTABLISHED: requires genuine engagement — min 2 turns
+        # TRUST_ESTABLISHED: passive unlock based on engagement, not LLM judgment.
+        # Unlocks when the attending has had enough positive interactions:
+        # - At least 4 turns of conversation (they didn't rush)
+        # - At least 2 direct patient interactions in history
+        # The idea: trust is built by showing up, not by saying magic words.
         if node.trigger == RevealTrigger.TRUST_ESTABLISHED:
-            if self.turn_count < 2:
-                return False
+            patient_interactions = sum(
+                1 for t in self.history if t.role == "attending"
+            )
+            result = self.turn_count >= 4 and patient_interactions >= 2
+            logger.debug(
+                "TRUST_ESTABLISHED trigger: turn_count=%d, patient_interactions=%d, result=%s",
+                self.turn_count, patient_interactions, result,
+            )
+            return result
 
-        # For DIRECT_QUESTION and TRUST_ESTABLISHED (after turn check):
-        # use LLM to evaluate
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                max_tokens=50,
-                messages=[
-                    {"role": "system", "content": TRIGGER_EVAL_PROMPT},
-                    {"role": "user", "content": f"""
+        # For DIRECT_QUESTION only: use LLM to evaluate
+        logger.debug(
+            "Evaluating DIRECT_QUESTION trigger: detail=%r, message=%r",
+            node.trigger_detail[:80], attending_message[:80],
+        )
+
+        max_attempts = 2  # 1 initial + 1 retry
+        last_raw = ""
+        for attempt in range(max_attempts):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    max_tokens=150,
+                    messages=[
+                        {"role": "system", "content": TRIGGER_EVAL_PROMPT},
+                        {"role": "user", "content": f"""
 Trigger type: {node.trigger.value}
 Trigger condition: {node.trigger_detail}
 
@@ -562,31 +819,40 @@ Turn count: {self.turn_count}
 
 Has the trigger condition been met? Return JSON only: {{"triggered": true}} or {{"triggered": false}}
 """}
-                ],
+                    ],
+                )
+                last_raw = response.choices[0].message.content.strip()
+                result = self._robust_json_parse(last_raw)
+                triggered = result.get("triggered", False)
+                logger.debug(
+                    "Trigger eval attempt %d succeeded: raw=%r, triggered=%s",
+                    attempt + 1, last_raw[:120], triggered,
+                )
+                return triggered
+            except json.JSONDecodeError:
+                logger.warning(
+                    "Trigger eval attempt %d: JSON parse failed, raw=%r",
+                    attempt + 1, last_raw[:200],
+                )
+                # Retry on first attempt
+                if attempt < max_attempts - 1:
+                    continue
+            except Exception as e:
+                logger.warning(
+                    "Trigger eval attempt %d failed (%s: %s)",
+                    attempt + 1, type(e).__name__, e,
+                )
+                break  # Don't retry on non-JSON errors (API failures etc.)
+
+        # Fallback for direct_question: keyword + bigram overlap
+        if node.trigger == RevealTrigger.DIRECT_QUESTION:
+            fallback_result = self._keyword_fallback(attending_message, node.trigger_detail)
+            logger.debug(
+                "Keyword fallback for DIRECT_QUESTION: result=%s, detail=%r",
+                fallback_result, node.trigger_detail[:80],
             )
-            raw = response.choices[0].message.content.strip()
-            raw = re.sub(r'^```(?:json)?\s*', '', raw)
-            raw = re.sub(r'\s*```$', '', raw)
-            import json
-            result = json.loads(raw)
-            return result.get("triggered", False)
-        except Exception as e:
-            import sys
-            print(f"[WARN] trigger eval failed ({type(e).__name__}: {e})", file=sys.stderr)
-            # Fallback for direct_question: keyword overlap between
-            # attending message and trigger_detail
-            if node.trigger == RevealTrigger.DIRECT_QUESTION:
-                import re as _re
-                def _words(s):
-                    return set(_re.sub(r"[^\w\s]", "", s.lower()).split())
-                overlap = _words(attending_message) & _words(node.trigger_detail)
-                # exclude stopwords
-                overlap -= {"the","a","an","is","are","was","were","has","have",
-                            "do","did","how","what","when","where","why","who",
-                            "long","been","you","your","i","it","in","of","to",
-                            "and","or","for","that","this","with","about"}
-                return bool(overlap)
-            return False
+            return fallback_result
+        return False
 
     # ------------------------------------------------------------------
     # Internal: response generation
@@ -676,11 +942,29 @@ WHAT IS STILL LOCKED (DO NOT REVEAL UNTIL TRIGGERED)
 TURN COUNT: {self.turn_count}
 (Higher turn count = slightly more openness is natural,
 but never complete — you are still protecting what you protect.)
+{self._warmth_injection()}
+"""
+
+    def _warmth_injection(self) -> str:
+        """After turn 3, nudge the patient to bring in life details."""
+        if self.turn_count < 3:
+            return ""
+        pp = self.case.patient_profile
+        return f"""
+THINGS YOU CAN NATURALLY BRING UP (not all at once — one per turn max):
+- Your work: {pp.occupation}
+- Your living situation: {pp.living_situation}
+- The person waiting for you: {pp.key_person} ({pp.key_person_relationship})
+- What you were doing before you came in / why today: {pp.why_they_came_today}
+These are NOT gated reveals. They are normal things a patient mentions
+when they're sitting in an ER. Use them to fill silence and show who
+you are as a person, not just a chief complaint.
 """
 
     def _format_history_for_prompt(self) -> list[dict]:
         """Convert interaction history to OpenAI message format.
-        Only sends last 8 turns to prevent context blowout on long shifts."""
+        Only sends last 3 pairs (6 messages) to keep system prompt dominant
+        and prevent the LLM from pattern-matching on its own gestures."""
         messages = []
         for turn in self.history:
             if turn.role == "attending":
@@ -694,7 +978,7 @@ but never complete — you are still protecting what you protect.)
                     "content": turn.content,
                 })
             # Skip system turns — they're in the context doc
-        return messages[-16:]  # 8 pairs = 16 messages max
+        return messages[-6:]  # 3 pairs = 6 messages max
 
     def _format_recent_history(self, n: int) -> str:
         """Format last n turns as plain text for trigger evaluation."""
@@ -718,7 +1002,7 @@ but never complete — you are still protecting what you protect.)
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
-                max_tokens=300,    # Patients are not verbose
+                max_tokens=350,    # Room for a real sentence + one behavioral beat
                 messages=[
                     {"role": "system", "content": system},
                     *messages,
@@ -897,6 +1181,128 @@ but never complete — you are still protecting what you protect.)
             return response.choices[0].message.content.strip()
         except Exception:
             return f"[{test_name}]: Result pending."
+
+    # Override with stricter, test-specific result generation so the
+    # ordered study and returned content stay aligned.
+    def _get_test_result(self, test_name: str) -> str:
+        test_lower = self._canonical_test_name(test_name)
+
+        if any(w in test_lower for w in [
+            "troponin", "bnp", "cbc", "bmp", "cmp", "lactate", "d-dimer",
+            "tsh", "free t4", "coagulation", "inr", "ptt", "hiv", "tb",
+            "afb", "culture", "urinalysis", "ua", "pregnancy", "hcg",
+            "magnesium",
+        ]):
+            return self._generate_structured_test_result(test_lower, "lab")
+
+        if any(w in test_lower for w in [
+            "x-ray", "chest x-ray", "cxr", "ct", "cta", "mri", "ultrasound", "echo",
+        ]):
+            return self._generate_structured_test_result(test_lower, "imaging")
+
+        if any(w in test_lower for w in ["ekg", "ecg", "electrocardiogram"]):
+            return self._generate_structured_test_result(test_lower, "ecg")
+
+        mt = self.case.medical_truth
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                max_tokens=150,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You generate realistic emergency department test results. "
+                            "Return only the result text, no preamble. "
+                            "Be specific and clinical. Results must be consistent with the diagnosis. "
+                            "The result must ONLY match the ordered test and must not mention unrelated studies."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"True diagnosis: {mt.true_diagnosis}\n"
+                            f"Known lab findings: {mt.what_labs_show}\n"
+                            f"Known imaging findings: {mt.what_imaging_shows or 'N/A'}\n"
+                            f"Test ordered: {test_name}\n\n"
+                            "Generate the result for this specific test only."
+                        ),
+                    },
+                ],
+            )
+            return response.choices[0].message.content.strip()
+        except Exception:
+            return f"[{test_name}]: Result pending."
+
+    def _generate_structured_test_result(self, test_name: str, category: str) -> str:
+        mt = self.case.medical_truth
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                max_tokens=180,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You generate one emergency department test result.\n"
+                            "Rules:\n"
+                            "- Match the ordered test exactly.\n"
+                            "- Lab results may only contain lab-style findings.\n"
+                            "- Imaging results may only contain imaging findings/impression.\n"
+                            "- ECG results may only contain rhythm/rate/interval/ST-T findings.\n"
+                            "- Never mention another modality or unrelated study.\n"
+                            "- If source truth is broad, generate a conservative compatible result."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Ordered test: {test_name}\n"
+                            f"Category: {category}\n"
+                            f"True diagnosis: {mt.true_diagnosis}\n"
+                            f"Known lab findings: {mt.what_labs_show}\n"
+                            f"Known imaging findings: {mt.what_imaging_shows or 'N/A'}\n"
+                            "Return only the result text for the ordered test."
+                        ),
+                    },
+                ],
+            )
+            result = response.choices[0].message.content.strip()
+            if self._result_matches_category(result, category):
+                return result
+        except Exception:
+            pass
+        if category == "lab":
+            if "urinalysis" in test_name or test_name == "ua":
+                return (
+                    f"[Lab result - {test_name}]: UA shows specific gravity 1.025, "
+                    f"trace blood, negative nitrite, negative leukocyte esterase."
+                )
+            return (
+                f"[Lab result - {test_name}]: WBC 10.8, hemoglobin 13.2, "
+                f"creatinine 0.9, interpreted in clinical context."
+            )
+        if category == "imaging":
+            return f"[Imaging - {test_name}]: Findings compatible with the suspected diagnosis."
+        return f"[ECG - {test_name}]: Sinus rhythm interpreted in clinical context."
+
+    def _result_matches_category(self, result: str, category: str) -> bool:
+        text = result.lower()
+        lab_words = (
+            "wbc", "hemoglobin", "hematocrit", "platelets",
+            "sodium", "potassium", "creatinine", "troponin",
+            "ua", "urinalysis", "nitrite", "leukocyte", "specific gravity",
+        )
+        imaging_words = ("impression", "findings", "x-ray", "ct", "mri", "ultrasound", "fracture", "infiltrate", "effusion")
+        ecg_words = ("ecg", "ekg", "rhythm", "rate", "qrs", "st", "t wave", "sinus")
+
+        if category == "lab":
+            return any(word in text for word in lab_words) and not any(word in text for word in ("ct head", "mri", "ultrasound"))
+        if category == "imaging":
+            return any(word in text for word in imaging_words) and not any(word in text for word in ("hemoglobin", "platelets", "creatinine", "potassium"))
+        if category == "ecg":
+            return any(word in text for word in ecg_words) and not any(word in text for word in ("creatinine", "platelets", "impression: no acute"))
+        return True
 
 
 # _get_client() removed — using centralized llm.get_client()

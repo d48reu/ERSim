@@ -1,0 +1,9 @@
+# Runtime deps are defined in pyproject.toml ([project.dependencies]).
+# For a bare venv without editable install:
+#   pip install -r requirements.txt
+# For local dev / tests (recommended):
+#   pip install -e ".[dev]"
+fastapi==0.135.1
+openai==2.29.0
+pydantic==2.12.5
+uvicorn[standard]==0.42.0

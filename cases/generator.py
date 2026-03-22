@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import re
 from datetime import datetime
 
@@ -7,11 +8,14 @@ from openai import OpenAI
 from pydantic import ValidationError
 
 from .schema import ShiftCasePool, GeneratedCase
-from .prompts import CASE_GENERATION_SYSTEM_PROMPT, build_case_generation_prompt
+from .prompts import (
+    CASE_GENERATION_SYSTEM_PROMPT,
+    build_case_generation_prompt,
+    TEMPLATE_CASE_SYSTEM_PROMPT,
+    build_template_case_prompt,
+)
+from .case_templates import CASE_TEMPLATES, get_random_templates
 
-# Use centralized client factory
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from llm import get_client, get_model
 
 
@@ -196,6 +200,216 @@ def generate_shift_cases(
     # Re-number case_ids sequentially across the merged pool
     for i, case in enumerate(all_cases):
         case["case_id"] = f"{shift_id}_{i+1:02d}"
+
+    pool = ShiftCasePool.model_validate({
+        "shift_id": shift_id,
+        "cases": all_cases,
+    })
+    return pool
+
+
+# ======================================================================
+# Template-based case generation (new)
+# ======================================================================
+
+def _generate_single_from_template(
+    client: OpenAI,
+    template: dict,
+    case_id: str,
+    shift_context: dict | None,
+    model: str,
+    max_retries: int = 2,
+) -> dict | None:
+    """
+    Generate one case from a template seed.
+    Returns a validated case dict, or None if generation fails.
+    """
+    user_prompt = build_template_case_prompt(
+        template=template,
+        case_id=case_id,
+        shift_context=shift_context,
+    )
+
+    last_error = None
+    for attempt in range(max_retries + 1):
+        try:
+            if attempt > 0:
+                print(f"    template case {case_id} retry {attempt}/{max_retries}...")
+
+            response = client.chat.completions.create(
+                model=model,
+                max_tokens=4096,
+                messages=[
+                    {"role": "system", "content": TEMPLATE_CASE_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_prompt},
+                ],
+            )
+
+            raw = response.choices[0].message.content
+            cleaned = _clean_json(raw)
+            data = json.loads(cleaned)
+
+            # Force the correct case_id
+            data["case_id"] = case_id
+
+            validated = GeneratedCase.model_validate(data)
+            return validated.model_dump()
+
+        except (json.JSONDecodeError, ValueError, ValidationError) as e:
+            last_error = e
+            if attempt < max_retries:
+                user_prompt += f"""
+
+CORRECTION NEEDED
+-----------------
+Previous attempt failed: {e}
+
+Return valid JSON only. One GeneratedCase object.
+No markdown. No explanation. Raw JSON only.
+"""
+
+    print(f"    WARNING: template case {case_id} failed after "
+          f"{max_retries + 1} attempts: {last_error}")
+    return None
+
+
+# Session-level template usage tracking.
+# Stores indices of templates used in recent shifts to avoid repeats.
+# Resets when the pool is exhausted (all templates used).
+_recently_used_templates: set[int] = set()
+
+
+def generate_shift_cases_from_templates(
+    num_cases: int = 3,
+    shift_context: dict | None = None,
+    model: str | None = None,
+    max_retries: int = 2,
+    ensure_acuity_mix: bool = True,
+) -> ShiftCasePool:
+    """
+    Generate cases by randomly selecting from the template bank and
+    having the LLM flesh each one out individually.
+
+    This produces much higher variety than free-form batch generation
+    because each case starts from a different medical template with
+    randomized demographics.
+
+    Tracks recently-used templates across shifts within the same process
+    to avoid repeats (e.g., herpes zoster 3x in 6 runs). Resets when
+    the pool is exhausted.
+
+    Args:
+        num_cases: How many cases to generate (default 3 for a shift)
+        shift_context: Optional shift context dict
+        model: LLM model override
+        max_retries: Retries per case on validation failure
+        ensure_acuity_mix: If True and num_cases >= 3, ensures at least
+            one high-acuity and one lower-acuity case in the mix
+
+    Returns:
+        ShiftCasePool with the generated cases
+    """
+    global _recently_used_templates
+
+    client = get_client()
+    model = get_model("generation", override=model)
+
+    shift_id = f"SHIFT_{datetime.now().strftime('%Y%m%d_%H%M')}"
+    if shift_context:
+        shift_context = {**shift_context, "shift_id": shift_id}
+
+    # Reset recency tracking if pool is nearly exhausted
+    # (leave at least num_cases * 2 templates available)
+    available_count = len(CASE_TEMPLATES) - len(_recently_used_templates)
+    if available_count < num_cases * 2:
+        print(f"  Template recency pool exhausted ({available_count} left), resetting...")
+        _recently_used_templates = set()
+
+    # Combine session-level recency avoidance with within-shift dedup
+    avoid = set(_recently_used_templates)
+
+    # Select templates with optional acuity-mix enforcement
+    if ensure_acuity_mix and num_cases >= 3:
+        # Get at least one high-acuity (1-2), one mid (3), one lower (4-5)
+        high = [(i, t) for i, t in enumerate(CASE_TEMPLATES)
+                if t["acuity_range"][0] <= 2 and i not in avoid]
+        mid = [(i, t) for i, t in enumerate(CASE_TEMPLATES)
+               if 3 in range(t["acuity_range"][0], t["acuity_range"][1] + 1)
+               and i not in avoid]
+        low = [(i, t) for i, t in enumerate(CASE_TEMPLATES)
+               if t["acuity_range"][1] >= 4 and i not in avoid]
+
+        picks: list[tuple[int, dict]] = []
+        used_indices: set[int] = set(avoid)
+
+        # One from each bucket
+        for bucket in [high, mid, low]:
+            available = [(i, t) for i, t in bucket if i not in used_indices]
+            if available:
+                choice = random.choice(available)
+                picks.append(choice)
+                used_indices.add(choice[0])
+            if len(picks) >= num_cases:
+                break
+
+        # Fill remaining from full pool
+        if len(picks) < num_cases:
+            extras = get_random_templates(
+                num_cases - len(picks), avoid_indices=used_indices
+            )
+            picks.extend(extras)
+    else:
+        picks = get_random_templates(num_cases, avoid_indices=avoid)
+
+    # Generate each case
+    all_cases: list[dict] = []
+    for seq, (template_idx, template) in enumerate(picks, start=1):
+        case_id = f"{shift_id}_{seq:02d}"
+        diag = template["true_diagnosis"][:50]
+        print(f"  Case {seq}/{len(picks)}: {diag}...")
+
+        case = _generate_single_from_template(
+            client=client,
+            template=template,
+            case_id=case_id,
+            shift_context=shift_context,
+            model=model,
+            max_retries=max_retries,
+        )
+
+        if case is not None:
+            all_cases.append(case)
+        else:
+            # Fallback: try another template
+            print(f"    Falling back to alternate template...")
+            used = {p[0] for p in picks}
+            alts = get_random_templates(1, avoid_indices=used)
+            if alts:
+                alt_idx, alt_template = alts[0]
+                alt_case = _generate_single_from_template(
+                    client=client,
+                    template=alt_template,
+                    case_id=case_id,
+                    shift_context=shift_context,
+                    model=model,
+                    max_retries=max_retries,
+                )
+                if alt_case is not None:
+                    all_cases.append(alt_case)
+
+    if not all_cases:
+        raise RuntimeError(
+            "Template-based generation produced zero valid cases. "
+            "Check LLM connectivity and model availability."
+        )
+
+    # Track which templates were used this shift for cross-shift dedup
+    for template_idx, _ in picks:
+        _recently_used_templates.add(template_idx)
+
+    # Re-number sequentially
+    for i, case in enumerate(all_cases):
+        case["case_id"] = f"{shift_id}_{i + 1:02d}"
 
     pool = ShiftCasePool.model_validate({
         "shift_id": shift_id,
