@@ -14,9 +14,13 @@ build/
 *.env
 .env.*
 
-# Test output / generated cases
-test_output.json
-*.json
+# Local / one-off playtest artifacts (keep scripts; ignore dumps)
+playtest_*_output*.txt
+playtest_*_raw*.txt
+playtest_*_console*.txt
+*_full_output.txt
+run*_output.txt
+playtest_v2_results.json
 
 # Editor
 .vscode/

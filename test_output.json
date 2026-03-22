@@ -1,0 +1,1329 @@
+{
+  "shift_id": "SHIFT_20260317_0118",
+  "cases": [
+    {
+      "case_id": "SHIFT_20260317_0118_01",
+      "narrative_hook": "A woman who has been managing her own fever for three days at home because calling out of work means losing hours she cannot afford to lose. Her roommate finally told her she looked bad enough to come in. She does not think she needs to be here.",
+      "presenting_layer": {
+        "chief_complaint": "fever",
+        "age": 34,
+        "sex": "F",
+        "vitals": {
+          "hr": 118,
+          "bp_systolic": 98,
+          "bp_diastolic": 62,
+          "rr": 24,
+          "temp_f": 103.8,
+          "o2_sat": 94,
+          "gcs": 15
+        },
+        "triage_note": "34F fever \u00d7 3 days, tachycardic, hypotensive, tachypneic. Denies severe illness. Roommate reports patient seemed unwell today.",
+        "acuity": 2,
+        "arrival_method": "family drop-off",
+        "time_in_waiting_room_minutes": 8
+      },
+      "medical_truth": {
+        "true_diagnosis": "Influenza with early sepsis, hypotensive phase",
+        "supporting_findings": [
+          "Tachycardia out of proportion to fever",
+          "Borderline hypotension for relatively young woman",
+          "Tachypnea and mild hypoxia",
+          "Patient downplaying severity of illness",
+          "Three-day fever duration with worsening trend"
+        ],
+        "what_labs_show": "CBC with elevated WBC (14.2), left shift. Lactate 2.1 (mild elevation). BMP shows early dehydration pattern. Blood cultures pending. Rapid influenza positive.",
+        "what_imaging_shows": null,
+        "time_sensitivity": true,
+        "time_window_minutes": 180,
+        "red_herrings": [
+          "Normal O2 sat at 94 makes sepsis seem less urgent",
+          "Patient's calm demeanor and denial of severity",
+          "No respiratory complaints volunteer \u2014 only fever"
+        ],
+        "classic_miss_reason": "Sepsis from influenza can look deceptively mild in early phases. The patient is not dramatically ill on appearance and is actively minimizing. Recognizing the vital sign pattern \u2014 tachycardia + borderline hypotension + tachypnea in a febrile patient \u2014 requires synthesis that gets interrupted by patient's own framing of the problem as 'just a fever.'"
+      },
+      "patient_profile": {
+        "first_name": "Maria",
+        "last_name": "Hernandez",
+        "occupation": "Warehouse stager and inventory",
+        "living_situation": "Shares apartment with one roommate, both working hourly jobs",
+        "why_they_came_today": "Roommate insisted after noticing her breathing seemed labored. Maria came because it was easier to agree than argue, not because she wanted to.",
+        "what_theyre_not_saying": "She has already used up her paid time off this year. Missing work today costs her money she needs for next month's rent. She is terrified of hospitalization bills.",
+        "what_they_fear": "Medical debt more than the fever. She has seen what happens to people who spend time in the hospital without insurance.",
+        "what_they_are_protecting": "Her ability to work. Her independence. She is the one in the household who usually stays healthy.",
+        "communication_style": "Speaks in complete sentences and makes good eye contact, which reads as reassuring until you notice she is answering questions before they are fully asked. Eager to get through the interaction. Phrases things as questions even when making statements \u2014 'So this is probably just like a cold thing?'",
+        "attitude_toward_medical_system": "Respectful but distant. Uses the ED only when absolutely forced. Does not have a primary care doctor.",
+        "key_person": "Roommate, Rosa",
+        "key_person_relationship": "They have lived together for two years. Rosa works retail. This is not family but functions as such."
+      },
+      "reveal_sequence": [
+        {
+          "trigger": "direct_question",
+          "trigger_detail": "When asked about work and whether she had to miss today",
+          "information": "She is losing four hours of pay. She gets paid by the hour and there is no sick leave policy in her job category.",
+          "patient_language": "It is what it is. I probably should not have come but Rosa would not let it go.",
+          "emotional_register": "Matter-of-fact resignation overlaying anxiety"
+        },
+        {
+          "trigger": "physical_exam",
+          "trigger_detail": "During auscultation, patient has scattered wheezes bilaterally and soft crackles at bases",
+          "information": "She has not mentioned any cough. When asked directly, she says she has been coughing for two days but thought it was just dry cough from the fever.",
+          "patient_language": "Yeah, it is there but it is not bad. Not like, I cannot breathe or anything.",
+          "emotional_register": "Defensive. She is being contradicted."
+        },
+        {
+          "trigger": "test_result",
+          "trigger_detail": "Lactate comes back at 2.1 and CBC shows WBC 14.2 with left shift",
+          "information": "These are early sepsis markers. She needs IV fluids and monitoring, likely admission.",
+          "patient_language": "How long? I have a shift tomorrow morning.",
+          "emotional_register": "Alarm beneath the surface"
+        },
+        {
+          "trigger": "trust_established",
+          "trigger_detail": "After provider explains sepsis risk and that influenza can get serious fast",
+          "information": "She admits she has been feeling worse since yesterday morning but convinced herself it was just the fever breaking. She has lost time from work before and gotten in trouble for it.",
+          "patient_language": "My manager said if I miss any more days this quarter I am on thin ice. I do not want to lose this job.",
+          "emotional_register": "Frightened and caught between two fears"
+        }
+      ],
+      "outcome_trajectory": {
+        "correct_treatment": "IV fluid resuscitation, empiric antivirals, admission for monitoring. Broad-spectrum antibiotics after blood cultures if secondary bacterial infection suspected.",
+        "correct_outcome": "Patient admits to floor. Responds well to fluids. Discharged in 48 hours with close follow-up. Does not deteriorate. Works as a cautionary tale about how sick people can seem well.",
+        "missed_diagnosis": "Patient sent home with reassurance, told to rest and monitor fever. Deteriorates that evening, comes back in by ambulance the next morning in frank septic shock. Requires ICU admission and longer hospitalization.",
+        "resident_catches_it_unsupervised": "Resident pulls up influenza positive result, notes vital sign constellation, recognizes that patient's denial does not match physiology. Proactively requests lactate and gets early sepsis picture.",
+        "resident_misses_it_unsupervised": "Resident frames this as 'flu, probably viral, follow-up with PCP if it does not improve.' Does not check lactate. Focuses on reassurance because patient seems relatively well. Discharge paperwork gets signed.",
+        "disposition": "admit-floor",
+        "follow_up_hook": "Maria will think about this event for months. She will also not have insurance clearance until after she is discharged. The financial fallout will be worse than the illness."
+      },
+      "systemic_flags": {
+        "world_event_connection": "Early influenza season plus working-poor population with no sick leave and fear of medical debt creates vulnerability. This case reflects the community context directly.",
+        "shift_case_connection": null,
+        "return_patient": false,
+        "prior_visit_summary": null,
+        "future_seed": "Maria's hospitalization bill will arrive in two weeks. She will be unable to pay it. She will not seek follow-up care for months."
+      }
+    },
+    {
+      "case_id": "SHIFT_20260317_0118_02",
+      "narrative_hook": "A man with hip pain who came in an ambulance but keeps apologizing to the paramedics for making them come. He lives alone and fell at home. He wants to know if he can just go home. Nobody appears to have any context for why he lives the way he does.",
+      "presenting_layer": {
+        "chief_complaint": "left hip pain after fall",
+        "age": 71,
+        "sex": "M",
+        "vitals": {
+          "hr": 92,
+          "bp_systolic": 142,
+          "bp_diastolic": 88,
+          "rr": 18,
+          "temp_f": 98.4,
+          "o2_sat": 96,
+          "gcs": 15
+        },
+        "triage_note": "71M found down at home, EMS called by neighbor. Complaints of left hip and leg pain. Able to move lower extremities. Pain to palpation over left hip. Denies loss of consciousness. Ambulance transport over patient protest.",
+        "acuity": 3,
+        "arrival_method": "ambulance",
+        "time_in_waiting_room_minutes": 0
+      },
+      "medical_truth": {
+        "true_diagnosis": "Intertrochanteric hip fracture with extracapsular extension, hypertensive response to acute pain",
+        "supporting_findings": [
+          "Mechanism: mechanical fall in older adult",
+          "Pain out of proportion to casual exam \u2014 he is guarding heavily",
+          "Unable to bear weight (though he has not tried hard)",
+          "Elevated blood pressure (acute pain response)",
+          "Short lie time unknown \u2014 could have been down for hours"
+        ],
+        "what_labs_show": "CBC normal, CMP normal. Troponin negative. No acute renal injury. Mild anemia, chronic.",
+        "what_imaging_shows": "X-ray shows comminuted intertrochanteric fracture. Extends into subtrochanteric region. Surgical intervention required.",
+        "time_sensitivity": false,
+        "time_window_minutes": null,
+        "red_herrings": [
+          "Normal mental status and hemodynamic stability makes urgency seem low",
+          "Patient's own minimization and politeness",
+          "Lack of visible bruising or deformity on initial inspection"
+        ],
+        "classic_miss_reason": "Older patients with hip fracture can have surprisingly stable vital signs and clear mentation in the acute phase. The politeness and the minimizing ('I do not want to bother anyone') can mask the severity of a surgical emergency. A resident who does not recognize that hip fracture = automatic orthopedic consultation and likely admission may discharge this patient, setting up a discharge before imaging is done or may wait for orthopedic bed availability instead of triggering urgent evaluation."
+      },
+      "patient_profile": {
+        "first_name": "Richard",
+        "last_name": "Carmichael",
+        "occupation": "Retired machinist",
+        "living_situation": "Lives alone in a small house in Riverside. Has lived there for 47 years. Lives independently but no family in area.",
+        "why_they_came_today": "He did not call for help. His neighbor heard a thump and called paramedics. He was on the floor for somewhere between 30 minutes and two hours.",
+        "what_theyre_not_saying": "He has been living alone since his wife died seven years ago. He has become increasingly solitary. His daughter lives in Colorado and they talk roughly monthly. He has not had a primary care doctor in three years.",
+        "what_they_fear": "Losing independence. If this breaks his hip badly enough that he needs help, he is terrified he will have to leave his house. He will end up in a facility. He will lose the last thing he has that is his.",
+        "what_they_are_protecting": "The image of himself as someone who is still fine on his own. The autonomy. The house.",
+        "communication_style": "Extremely polite. Addresses everyone as 'sir' or 'miss.' Apologizes repeatedly for the ambulance, for taking up space, for his pain inconveniencing others. Looks away when speaking about personal things. Has a slight tremor in his hands when he talks about his situation.",
+        "attitude_toward_medical_system": "Respectful but suspicious. Reluctant. Has had bad experiences being told what to do by doctors before and has stopped engaging with preventive care.",
+        "key_person": "Neighbor, Linda Vasquez, who called the ambulance",
+        "key_person_relationship": "She lives two doors down. They have known each other for 12 years. She checks on him roughly weekly and feeds his cat when he is not home."
+      },
+      "reveal_sequence": [
+        {
+          "trigger": "direct_question",
+          "trigger_detail": "When asked about who is at home with him or who needs to be called",
+          "information": "No one is at home. There is a cat. His daughter is in Colorado. He does not want her called because she will 'overreact.'",
+          "patient_language": "Linda from next door will take care of the cat. She has a key. Please do not call my daughter, she will just worry.",
+          "emotional_register": "Firmly set, but there is something underneath it \u2014 maybe awareness that his daughter will indeed need to be called and he is delaying it"
+        },
+        {
+          "trigger": "prolonged_stay",
+          "trigger_detail": "During waiting for imaging, patient has been quiet and appears to be thinking",
+          "information": "He admits he has been having trouble with stairs for about a year. And balance. And he has not really been leaving the house as much. He fell on the way to the bathroom.",
+          "patient_language": "I just lost my footing. It happens. I am not as young as I used to be.",
+          "emotional_register": "Resignation, but also the admission itself feels significant \u2014 like something he has been holding"
+        },
+        {
+          "trigger": "physical_exam",
+          "trigger_detail": "During detailed neuro and strength exam, provider notices he is reluctant to talk about functional limitations",
+          "information": "He has not driven in eight months. Started after a small accident. He does not feel safe driving anymore. He is not sure why he was going to the bathroom \u2014 he had been in the living room watching television for most of the day.",
+          "patient_language": "I get by. I have neighbors. Linda brings me things sometimes.",
+          "emotional_register": "Evasive, but underneath is something like shame"
+        },
+        {
+          "trigger": "family_present",
+          "trigger_detail": "Daughter Rachel calls back after being left urgent voicemail. She is in the ER within the hour because she drove three hours from the airport.",
+          "information": "Rachel confirms what the patient could not say: her father has been declining for about a year. He stopped coming to see her. She has been worried but did not know what to do. He refused any talk about moving to a facility or having more help. This is both a crisis and confirmation of something they already knew was happening.",
+          "patient_language": "I am so sorry to have worried you. I am sorry about all this.",
+          "emotional_register": "Defeated. The thing he was trying to prevent \u2014 his daughter's intervention \u2014 is now happening"
+        }
+      ],
+      "outcome_trajectory": {
+        "correct_treatment": "Orthopedic consultation emergently. Surgical fixation of hip fracture. Admission for post-operative care and physical therapy. Social work involved to plan discharge disposition.",
+        "correct_outcome": "Fracture is fixed surgically. Patient spends 5 days in hospital during PT recovery. Daughter arranges a care transition \u2014 either home health with daily visits or assisted living. Patient goes home with support structure. Maintains some independence but with safety net.",
+        "missed_diagnosis": "Patient is not clearly identified as surgical candidate. Imaging is delayed. Patient is kept for 'observation' and eventually discharged home without orthopedic follow-up because he 'feels okay.' Falls again at home within 5 days. Second fall is more severe, results in severe fracture and emergency surgery anyway, but now patient is sicker and recovery is worse.",
+        "resident_catches_it_unsupervised": "Resident notes hip fracture on X-ray, immediately calls orthopedic surgery, documents the need for admission and surgical planning. Triggers social work consultation proactively.",
+        "resident_misses_it_unsupervised": "Resident reviews X-ray but is uncertain about the fracture classification. Orders pain management and ice. Waits to see if 'patient can mobilize.' Does not call ortho until attending asks why ortho has not been consulted yet.",
+        "disposition": "admit-floor",
+        "follow_up_hook": "This case will ripple outward into a much larger conversation about living situation and support. The fall is the crisis, but the isolation is the underlying problem. Rachel will now be driving to Riverside regularly. The house may be sold. The cat's fate is uncertain."
+      },
+      "systemic_flags": {
+        "world_event_connection": "Cold snap this week has stressed unhoused population, but also affects isolated elderly people with limited mobility. This case is part of the same stress pattern on vulnerable populations.",
+        "shift_case_connection": null,
+        "return_patient": false,
+        "prior_visit_summary": null,
+        "future_seed": "Richard will be back through this ED multiple times in the next year. First for post-op follow-up, then for falls prevention checks, then for something else. His daughter will become more involved in his care."
+      }
+    },
+    {
+      "case_id": "SHIFT_20260317_0118_03",
+      "narrative_hook": "A teenager came in with his friends complaining of chest pain that started during basketball practice. He played through it for twenty minutes before his coach made him sit down. He is embarrassed and wants to leave. His friends are in the waiting room.",
+      "presenting_layer": {
+        "chief_complaint": "chest pain during sports",
+        "age": 16,
+        "sex": "M",
+        "vitals": {
+          "hr": 102,
+          "bp_systolic": 128,
+          "bp_diastolic": 76,
+          "rr": 20,
+          "temp_f": 98.6,
+          "o2_sat": 98,
+          "gcs": 15
+        },
+        "triage_note": "16M chest pain onset during basketball, duration 30 min, sharp quality, worse with deep breath. Denies shortness of breath. Coach insisted on transport. HR elevated. Exam otherwise unremarkable.",
+        "acuity": 3,
+        "arrival_method": "ambulance",
+        "time_in_waiting_room_minutes": 2
+      },
+      "medical_truth": {
+        "true_diagnosis": "Musculoskeletal chest wall pain with intercostal inflammation, secondary to exertion",
+        "supporting_findings": [
+          "Sharp pain worse with breathing and movement",
+          "Reproducible on palpation of intercostal spaces",
+          "Young athlete, no cardiac risk factors",
+          "Gradual onset during activity, not sudden",
+          "No dyspnea, no diaphoresis, no radiation"
+        ],
+        "what_labs_show": "EKG normal. Troponin negative. CBC normal. CMP normal.",
+        "what_imaging_shows": "Chest X-ray clear. No pneumothorax, no obvious findings.",
+        "time_sensitivity": false,
+        "time_window_minutes": null,
+        "red_herrings": [
+          "Chest pain in young person \u2014 immediately triggers cardiac workup",
+          "Elevated heart rate makes it seem more concerning",
+          "Coach's concern about sudden onset made it sound urgent"
+        ],
+        "classic_miss_reason": "Chest pain in teenagers automatically triggers cardiac consideration, which is appropriate for safety. But missing musculoskeletal chest pain in the context of normal EKG and troponin means the resident either over-tests (doing echo, advanced imaging, stress testing) or doesn't reassure effectively. The real miss is treating the patient like he might have something serious when he probably doesn't, while missing the opportunity to teach him about his actual problem and when real chest pain would matter."
+      },
+      "patient_profile": {
+        "first_name": "Marcus",
+        "last_name": "Thompson",
+        "occupation": "High school student, junior",
+        "living_situation": "Lives with both parents in Riverside. Older sister at state university. Family is solidly working-class, father works in manufacturing, mother is a nurse.",
+        "why_they_came_today": "His basketball coach called 911 because chest pain during sports is always concerning and coaches are trained to err on the side of caution. Marcus wanted to go back in the game.",
+        "what_theyre_not_saying": "He is embarrassed about the fuss. He is worried this will get him pulled off the team. He is also worried his parents will find out he was hurting and kept playing anyway instead of saying something right away.",
+        "what_they_fear": "That he will be treated as fragile or sick when he is not. That his friends will think he is weak. That he will miss games or practice.",
+        "what_they_are_protecting": "His identity as an athlete. His competence. The normal teenager thing.",
+        "communication_style": "Answers questions directly but with terse responses. Looks uncomfortable. Scrolls his phone when not being spoken to directly. Jumps at questions about how he is feeling \u2014 seems to interpret them as tests.",
+        "attitude_toward_medical_system": "Neutral to suspicious. Never been seriously sick. Views hospitals as places for old people or real emergencies, not him.",
+        "key_person": "His basketball coach, who is currently in the waiting room having insisted on coming along and is worried he made a mistake calling the ambulance",
+        "key_person_relationship": "Coach Rodriguez has been his coach for two years. Marcus respects him and does not want to disappoint him."
+      },
+      "reveal_sequence": [
+        {
+          "trigger": "direct_question",
+          "trigger_detail": "When asked if the pain is better or worse now",
+          "information": "It is about the same. He moved wrong a minute ago and it got worse. He thinks it might be a strained muscle.",
+          "patient_language": "Like, I did not feel good but I thought it was just a thing, you know? Like a cramp or something.",
+          "emotional_register": "Casual surface, but he is watching the provider to see if they believe him"
+        },
+        {
+          "trigger": "physical_exam",
+          "trigger_detail": "During palpation of chest wall and intercostal spaces, pain reproduces exactly with pressure on third and fourth intercostal space on left",
+          "information": "This is musculoskeletal pain. It is reproducible and in exactly the right place. He probably overstretched something during practice or a specific movement caused inflammation.",
+          "patient_language": "Yeah, right there. That is it. I did not really stretch before practice.",
+          "emotional_register": "Relief and validation"
+        },
+        {
+          "trigger": "test_result",
+          "trigger_detail": "EKG comes back completely normal. Troponin comes back negative.",
+          "information": "His heart is fine. This is not a cardiac event. He can be reassured completely.",
+          "patient_language": "So it is like, not serious?",
+          "emotional_register": "Wanting confirmation"
+        },
+        {
+          "trigger": "trust_established",
+          "trigger_detail": "Provider explains that musculoskeletal chest pain is common in athletes and explains the specific finding",
+          "information": "He pushed through pain in practice because he did not want to leave the game. He will do this again unless he understands when chest pain is and is not something to worry about.",
+          "patient_language": "So like, if it happens again, how do I know if it is bad?",
+          "emotional_register": "Genuine curiosity, like he is thinking about this for the future"
+        }
+      ],
+      "outcome_trajectory": {
+        "correct_treatment": "Reassurance after normal workup. Discharge with recommendation for rest, NSAIDs, and gradual return to activity. Clear teaching about red flag symptoms. Able to return to team after 2-3 days.",
+        "correct_outcome": "Patient goes home reassured. Takes ibuprofen, rests for a few days. Pain resolves. Returns to practice next week. Learns to speak up about pain earlier.",
+        "missed_diagnosis": "Not missed so much as mishandled. Resident over-interprets normal EKG and troponin as reassurance but orders chest CT or stress testing 'to be sure.' Patient hospitalized overnight for 'observation.' Becomes anxious about his heart. Worried he will not be able to play. Eventually reassured but the unnecessary workup planted doubt about his health. Returns to play with lingering anxiety.",
+        "resident_catches_it_unsupervised": "Resident does systematic evaluation, gets normal EKG and troponin, performs careful physical exam, reproduces pain with palpation, and confidently reassures patient that this is musculoskeletal. Discharges with clear return precautions and advice. Teaches patient about red flag symptoms.",
+        "resident_misses_it_unsupervised": "Resident is overly cautious because it is a teenager and chest pain, orders everything, admits for monitoring, does not reassure because they are not confident the patient is actually fine.",
+        "disposition": "discharge",
+        "follow_up_hook": "This is a routine case that should be routine. It serves as a contrast to the heavier cases on the shift. It also establishes that Coach Rodriguez is in the building and potentially available as a resource for future cases involving young athletes from the school."
+      },
+      "systemic_flags": {
+        "world_event_connection": null,
+        "shift_case_connection": null,
+        "return_patient": false,
+        "prior_visit_summary": null,
+        "future_seed": "Coach Rodriguez is a potential community resource. There may be more athletes from the school coming through the ED. Marcus will tell his teammates about this visit and what was in it."
+      }
+    },
+    {
+      "case_id": "SHIFT_20260317_0118_04",
+      "narrative_hook": "A man in his early fifties came in complaining of abdominal pain for two hours. He came alone and drove himself. He works in the industrial corridor nearby. He is irritable and wants to know how long this is going to take.",
+      "presenting_layer": {
+        "chief_complaint": "acute abdominal pain",
+        "age": 52,
+        "sex": "M",
+        "vitals": {
+          "hr": 88,
+          "bp_systolic": 136,
+          "bp_diastolic": 82,
+          "rr": 16,
+          "temp_f": 98.9,
+          "o2_sat": 99,
+          "gcs": 15
+        },
+        "triage_note": "52M RUQ and epigastric pain \u00d7 2 hours, onset after work. Describes as cramping. Denies N/V. Denies recent travel, sick contacts. Exam notable for tenderness RUQ, guarding. Otherwise stable.",
+        "acuity": 4,
+        "arrival_method": "walk-in",
+        "time_in_waiting_room_minutes": 18
+      },
+      "medical_truth": {
+        "true_diagnosis": "Acute biliary colic secondary to cholelithiasis",
+        "supporting_findings": [
+          "RUQ pain, postprandial onset (after work meal)",
+          "Guarding and tenderness in RUQ",
+          "No fever, normal vitals",
+          "Stable presentation, not acute cholecystitis yet",
+          "Patient's irritability is pain response"
+        ],
+        "what_labs_show": "CBC normal. CMP normal. LFTs normal (no obstruction currently). Lipase normal.",
+        "what_imaging_shows": "Ultrasound shows multiple gallstones, no common bile duct dilation. Gallbladder wall is normal thickness. No sonographic Murphy's sign.",
+        "time_sensitivity": false,
+        "time_window_minutes": null,
+        "red_herrings": [
+          "Right upper quadrant pain pattern can suggest hepatitis or other liver pathology, but LFTs are normal",
+          "Guarding can suggest peritonitis, but vital signs are stable and exam is focal",
+          "Patient's irritable affect and minimizing makes it seem less urgent"
+        ],
+        "classic_miss_reason": "Biliary colic is common and self-limited, which makes it easy to downweight. A resident might discharge with 'gastroenteritis' or 'indigestion' without imaging, missing the opportunity to identify cholelithiasis and counsel the patient on risk of recurrence and cholecystitis. Or, the resident might not order ultrasound if they are not thinking about biliary sources."
+      },
+      "patient_profile": {
+        "first_name": "James",
+        "last_name": "Kowalski",
+        "occupation": "Electrical supervisor at manufacturing facility",
+        "living_situation": "Lives in a modest apartment with a long-term partner. Has been working in manufacturing for 28 years.",
+        "why_they_came_today": "The pain was bad enough that he left work early. He does not leave work early. He drove straight to the ED because it was closer than driving home and hoping it would pass.",
+        "what_theyre_not_saying": "He is angry at himself for being here, bothering with this. He is worried about being labeled as weak or unreliable. He also has been noticing subtle signs of getting older \u2014 fatigue, weight gain, general malaise \u2014 and the pain has made him aware of his body in a way he has been avoiding.",
+        "what_they_fear": "That this is something serious. That he will have to have surgery. That he will miss work and his job security will suffer.",
+        "what_they_are_protecting": "His identity as a capable person who does not get sick. His work. His partnership with his partner \u2014 he has not told his partner he came to the ED yet.",
+        "communication_style": "Clipped speech. Answers yes and no, elaborates only when pressed. Sighs frequently. Makes eye contact but it reads as challenging rather than engaged. Taps his foot.",
+        "attitude_toward_medical_system": "Pragmatic and avoidant. Has not had a physical in seven years. Sees doctors as an inconvenience. Also defensive about it \u2014 like the avoidance is a choice he is making, not a failure.",
+        "key_person": "His partner, Dennis, who does not know he is here",
+        "key_person_relationship": "They have been together for fourteen years. Dennis would worry about him constantly if he knew. James wants to handle this himself."
+      },
+      "reveal_sequence": [
+        {
+          "trigger": "direct_question",
+          "trigger_detail": "When asked if this has happened before",
+          "information": "He had a similar pain about a month ago. It went away on its own in an hour. He thought it was something he ate.",
+          "patient_language": "Yeah, but it passed. I thought maybe it was a bad burger or something. This is the same but maybe worse.",
+          "emotional_register": "Dismissive, but also now he is connecting the dots"
+        },
+        {
+          "trigger": "physical_exam",
+          "trigger_detail": "During abdominal exam, tenderness reproduces with palpation and patient guards heavily",
+          "information": "Classic biliary pain pattern. The location and character fit. He has had this before and it is happening again.",
+          "patient_language": "Right there. Yeah. That is bad. So what does that mean?",
+          "emotional_register": "Worried now, but trying to stay composed"
+        },
+        {
+          "trigger": "test_result",
+          "trigger_detail": "Ultrasound shows multiple gallstones",
+          "information": "He has cholelithiasis. This is a chronic condition. The pain episodes are biliary colic from the stones. He needs to know this is going to happen again.",
+          "patient_language": "So I have stones? Like kidney stones but in the gallbladder?",
+          "emotional_register": "Processing. Irritability has shifted to concern"
+        },
+        {
+          "trigger": "trust_established",
+          "trigger_detail": "Provider explains that this is common, manages itself most of the time, but he needs to know when it becomes an emergency",
+          "information": "He needs to understand warning signs of cholecystitis \u2014 fever, persistent pain, vomiting. He should follow up with his primary care or get one. He should think about whether he wants elective cholecystectomy.",
+          "patient_language": "So I could have surgery to get rid of it? Or just deal with it when it happens?",
+          "emotional_register": "Actually engaged now, asking real questions"
+        }
+      ],
+      "outcome_trajectory": {
+        "correct_treatment": "Pain management. Imaging to confirm gallstones. Discharge with dietary modification advice and clear return precautions for cholecystitis. Primary care referral.",
+        "correct_outcome": "Patient goes home. Does follow-up with PCP who refers to surgery. Patient decides to have elective cholecystectomy in two months. Tells his partner what happened and they have a conversation about his health. Patient's pain resolves post-surgery.",
+        "missed_diagnosis": "Resident attributes pain to gastroenteritis or indigestion. Does not order imaging. Discharges with instruction to take antacids and rest. Patient has another episode at work and ends up in a different ED or presents later with acute cholecystitis that is infected, requiring emergent surgery instead of elective.",
+        "resident_catches_it_unsupervised": "Resident systematically works through RUQ pain differential, considers biliary source, orders ultrasound, gets clear diagnosis, appropriately reassures and counsels.",
+        "resident_misses_it_unsupervised": "Resident focuses on the patient's irritable demeanor and dismisses the pain as functional or anxiety-related. Does not pursue imaging. Does not take the complaint seriously.",
+        "disposition": "discharge",
+        "follow_up_hook": "James will need to follow up with a primary care provider, which he does not have. This is a low-acuity case that still opens up a larger conversation about preventive care and managing chronic conditions in a working-class population with limited access to regular medical attention."
+      },
+      "systemic_flags": {
+        "world_event_connection": null,
+        "shift_case_connection": null,
+        "return_patient": false,
+        "prior_visit_summary": null,
+        "future_seed": "James may or may not follow through on the PCP referral. If he does not, he will return to this ED in acute cholecystitis in 3-6 months. His partner Dennis may bring him next time."
+      }
+    },
+    {
+      "case_id": "SHIFT_20260317_0118_05",
+      "narrative_hook": "A construction foreman who came in because his hands won't stop shaking, and he's convinced it's because of the cold, and he needs to be back on the site by Friday morning or he loses the contract.",
+      "presenting_layer": {
+        "chief_complaint": "tremor and anxiety",
+        "age": 52,
+        "sex": "M",
+        "vitals": {
+          "hr": 118,
+          "bp_systolic": 156,
+          "bp_diastolic": 94,
+          "rr": 22,
+          "temp_f": 98.1,
+          "o2_sat": 97,
+          "gcs": 15
+        },
+        "triage_note": "52M with hand tremor x 2 days, anxiety, denies substance use, wants to leave quickly",
+        "acuity": 3,
+        "arrival_method": "walk-in",
+        "time_in_waiting_room_minutes": 35
+      },
+      "medical_truth": {
+        "true_diagnosis": "Alcohol withdrawal syndrome with autonomic hyperactivity",
+        "supporting_findings": [
+          "elevated heart rate and blood pressure consistent with sympathetic overdrive",
+          "fine tremor consistent with early withdrawal",
+          "timeline of 2 days matches onset of withdrawal",
+          "patient attributing symptoms to external cause rather than substance change",
+          "anxiety and agitation are early withdrawal manifestations"
+        ],
+        "what_labs_show": "elevated liver function tests (AST 156, ALT 98), slightly elevated phosphatase, mild thrombocytopenia at 118K, electrolytes otherwise normal, BAC 0 mEq/L indicating recent abstinence",
+        "what_imaging_shows": null,
+        "time_sensitivity": true,
+        "time_window_minutes": 720,
+        "red_herrings": [
+          "Recent cold weather exposure provides plausible alternative explanation for tremor",
+          "Denial of substance use is typical for patient protecting work status",
+          "Anxiety presentation could suggest panic disorder or hyperthyroidism",
+          "Elevated BP and HR could suggest thyroid storm or catecholamine surge from other cause"
+        ],
+        "classic_miss_reason": "Patient's explicit denial combined with plausible alternative explanation (cold exposure) and reasonable explanation for wanting to leave quickly (work contract) creates cognitive permission to accept surface narrative. Resident does not correlate the liver function abnormalities with the symptom presentation because the patient is not presenting as 'alcoholic' \u2014 he is a construction foreman with a plausible explanation for his symptoms."
+      },
+      "patient_profile": {
+        "first_name": "Michael",
+        "last_name": "Torres",
+        "occupation": "construction foreman",
+        "living_situation": "owns home with wife, two adult children in area",
+        "why_they_came_today": "his wife noticed the tremor this morning and insisted he come. He has been drinking heavily for months but cut back abruptly 72 hours ago when a new contract required his full focus and clear head. He came to convince the hospital to clear him so his wife would stop worrying.",
+        "what_theyre_not_saying": "He has been self-medicating a shoulder injury that ended his ability to do physical labor directly. He stopped drinking cold turkey to prove to himself he could manage this transition to foreman role without pills. He is terrified that admitting drinking will trigger his wife to push for AA again, and he does not believe he has a problem.",
+        "what_they_fear": "That he will be forced to stay in the hospital, and the contract will go to someone else, and he will be humiliated in front of his crew",
+        "what_they_are_protecting": "His self-image as a man in control. His marriage, which his wife has already threatened to end if the drinking continues. His new identity as a foreman rather than a laborer.",
+        "communication_style": "Answers questions efficiently with the minimum required information, volunteering details only about work stress and cold exposure. Makes direct eye contact. Sits with posture suggesting he is ready to leave. Checks his phone twice during the conversation.",
+        "attitude_toward_medical_system": "Views it as an obstacle to overcome rather than a resource. Believes doctors will judge him. Has used ERs in the past for sprains and minor injuries but avoided any preventive care.",
+        "key_person": "his wife, Maria",
+        "key_person_relationship": "She brought him to the ER this morning after seeing him shake while holding his coffee. She is in the waiting room. She knows he drinks but does not know the extent. She will reveal details if asked directly about home situation."
+      },
+      "reveal_sequence": [
+        {
+          "trigger": "direct_question",
+          "trigger_detail": "asking about alcohol use in the past month with specific language about 'drinking more than usual'",
+          "information": "He will admit to 'drinking more than he should' over the past three months due to shoulder pain making him irritable",
+          "patient_language": "Look, I've been having some beers most nights. It's not a big deal. I stopped a few days ago to focus on this new contract. That's why the shaking started.",
+          "emotional_register": "defensive but logical, as if explaining a reasonable decision"
+        },
+        {
+          "trigger": "family_present",
+          "trigger_detail": "wife brought into room",
+          "information": "Maria will report that he 'used to drink every night, sometimes a case of beer, sometimes whiskey.' She will say this is the first time he has stopped in months and she thought it was good. She will cry slightly.",
+          "patient_language": "Maria, I told you it's not that bad",
+          "emotional_register": "wife: sad and worried. patient: frustrated and embarrassed"
+        },
+        {
+          "trigger": "test_result",
+          "trigger_detail": "liver function results reviewed with patient",
+          "information": "AST/ALT ratio and thrombocytopenia indicate chronic alcohol use. These are consistent with hepatic adaptation to regular heavy drinking.",
+          "patient_language": "That's just from working outside. Everyone at the site has elevated liver stuff.",
+          "emotional_register": "minimization and rationalization"
+        },
+        {
+          "trigger": "prolonged_stay",
+          "trigger_detail": "if patient is observed for 4+ hours or offered inpatient admission",
+          "information": "He will eventually admit that he drank a case of beer most nights for the past three months because his shoulder injury ended his career trajectory and he could not manage that psychologically while sober. Stopping abruptly was an attempt to prove he could control it.",
+          "patient_language": "I needed to show myself I could stop. I needed this job to work. I can't go back to what I was doing.",
+          "emotional_register": "shame and desperation"
+        }
+      ],
+      "outcome_trajectory": {
+        "correct_treatment": "Benzodiazepine protocol for alcohol withdrawal (lorazepam or diazepam IV titrated to CIWA-Ar score), thiamine supplementation, correction of electrolyte abnormalities, counseling regarding withdrawal risk including seizure potential and progression to delirium tremens, strong referral to addiction medicine and social work before discharge, notification of PCP with recommendation for hepatology referral",
+        "correct_outcome": "Patient stabilizes on benzodiazepines, tremor resolves, anxiety reduces. Wife attends family meeting. Discharge with outpatient addiction medicine appointment and clear documentation of risk if he continues drinking pattern. Potential for follow-up in one week to assess adherence.",
+        "missed_diagnosis": "Patient attributed tremor and anxiety to cold weather and job stress. Sent home with reassurance and outpatient referral. Develops seizure at work on Friday morning, transported to hospital after falling from scaffolding. Complications including head trauma.",
+        "resident_catches_it_unsupervised": "Resident notes the tremor + tachycardia + hypertension + anxiety constellation, considers withdrawal, orders CIWA-Ar scale and asks specific alcohol questions. Gets honest answer from patient and completes standard withdrawal protocol. Calls attending to confirm but has already identified the diagnosis correctly.",
+        "resident_misses_it_unsupervised": "Resident attributes tremor to anxiety, checks TSH and basic metabolic panel (both normal), reassures patient the cold is causing the shaking, recommends patient rest and hydration, clears for discharge after 90 minutes. Patient leaves relieved and grateful.",
+        "disposition": "admit-floor",
+        "follow_up_hook": "Maria returns to waiting room and says, 'He's going to lose that contract.' She sits down heavily. She will become a touchstone for understanding chronic disease in working populations."
+      },
+      "systemic_flags": {
+        "world_event_connection": "cold snap stressing unhoused population also stressing self-medicating employed population; manufacturing job loss creates depression/anxiety that drives alcohol use; he represents transition cohort from labor to management struggling with identity loss",
+        "shift_case_connection": null,
+        "return_patient": false,
+        "prior_visit_summary": null,
+        "future_seed": "Maria Torres becomes recurring presence; her worry about Michael will manifest in next week when she brings her mother in for 'evaluation' with complaints that may or may not have medical basis"
+      }
+    },
+    {
+      "case_id": "SHIFT_20260317_0118_06",
+      "narrative_hook": "A 34-year-old woman who drove six hours to say goodbye to her sister, and on the drive home something happened that she has not mentioned to anyone, and her breathing has been off since.",
+      "presenting_layer": {
+        "chief_complaint": "shortness of breath x 4 hours",
+        "age": 34,
+        "sex": "F",
+        "vitals": {
+          "hr": 94,
+          "bp_systolic": 118,
+          "bp_diastolic": 72,
+          "rr": 24,
+          "temp_f": 98.6,
+          "o2_sat": 93,
+          "gcs": 15
+        },
+        "triage_note": "34F SOB, recent long drive, O2 sat 93, RR 24, chest clear, vitals otherwise stable, anxious",
+        "acuity": 2,
+        "arrival_method": "self-referral",
+        "time_in_waiting_room_minutes": 12
+      },
+      "medical_truth": {
+        "true_diagnosis": "Acute pulmonary embolism secondary to prolonged immobilization during 6-hour drive, likely with underlying hypercoagulable state triggered by recent oral contraceptive initiation",
+        "supporting_findings": [
+          "hypoxia (93%) with relatively preserved vital signs suggests PE rather than primary pulmonary disease",
+          "elevated respiratory rate (24) represents physiologic response to hypoxemia",
+          "tachycardia (94) is present but not severely elevated, suggesting acute onset rather than chronic compensation",
+          "normal temperature excludes infection as primary diagnosis",
+          "clear lung fields on auscultation rule out pneumonia and reduce likelihood of pulmonary edema",
+          "normal BP suggests PE without hemodynamic compromise, but this does not reduce mortality risk",
+          "O2 sat of 93% in a young person without lung disease is abnormal and should prompt consideration of PE"
+        ],
+        "what_labs_show": "d-dimer elevated at 2.1 mcg/mL (normal <0.5), troponin slightly elevated at 0.04 ng/mL suggesting RV strain, BNP elevated at 182 pg/mL, CBC normal, coagulation studies normal, lactate normal",
+        "what_imaging_shows": "CXR normal \u2014 no infiltrates, no pneumothorax, no cardiomegaly. CT angiography shows PE in right lower lobe pulmonary artery with evidence of acute RV strain on followup echo",
+        "time_sensitivity": true,
+        "time_window_minutes": 120,
+        "red_herrings": [
+          "Recent long drive provides completely plausible explanation for feeling exhausted and 'off'",
+          "Anxiety is common after 6-hour drive and can cause tachypnea",
+          "O2 sat of 93% in a young person might be attributed to measurement error or anxiety hyperventilation",
+          "Normal chest X-ray is falsely reassuring \u2014 PE can present with clear CXR",
+          "Patient is young and has no obvious risk factors mentioned (resident does not know about OCP)"
+        ],
+        "classic_miss_reason": "Resident anchors on 'anxious woman after long drive' and attributes SOB to anxiety. The mechanism of PE (prolonged immobilization) exactly matches the plausible explanation for why she is in the hospital at all. The normal CXR provides false reassurance. The O2 sat of 93% gets explained as anxiety hyperventilation rather than pathologic hypoxemia. The patient does not volunteer the OCP history because she does not realize it is relevant \u2014 she just started it two weeks ago for period control. The resident does not ask about OCP because the patient is 34 with no chest pain and normal vitals, so the resident's cognitive pattern does not activate 'VTE risk assessment.'"
+      },
+      "patient_profile": {
+        "first_name": "Jennifer",
+        "last_name": "Kowalski",
+        "occupation": "veterinary technician",
+        "living_situation": "apartment with roommate, has insurance through veterinary clinic, single, no children",
+        "why_they_came_today": "Her sister called her three weeks ago and said the cancer had metastasized and she wanted to say goodbye while still lucid. Jennifer drove up yesterday and spent the day with her. She left this morning around 11 AM to drive home. Around 2 PM, a dog ran into the highway in front of her. She swerved to avoid it, went onto the shoulder, and hit the guardrail. No collision with other vehicles. No airbag deployment because it was low-speed. She was not badly hurt but shaken. She did not want to call 911 because that would require police report and she did not want to deal with that while already emotional. She drove the remaining 3 hours home, finished the drive around 5:30 PM.",
+        "what_theyre_not_saying": "The accident. She is terrified that if she admits she was in an accident, they will do a full trauma workup, and her insurance will somehow find out about the pre-existing condition (she is a carrier for Factor V Leiden, unknown to her), and the OCP use will be flagged as contraindicated. She is also ashamed that she hit the guardrail because she was crying about her sister, and she does not want anyone to know she was emotionally compromised while driving.",
+        "what_they_fear": "That she will have to face that the accident was her fault because she was not paying attention. That her sister will die while she is in the hospital. That she actually hurt someone even though she did not see anyone else involved. That the cost of this ER visit will strain her financially.",
+        "what_they_are_protecting": "Her self-image as competent and in control. Her right to grieve her sister without additional crisis. Her secret that she was careless with a vehicle. Her medical naivety \u2014 she does not understand that OCP + prolonged sitting = VTE risk.",
+        "communication_style": "Speaks in short sentences with pauses between them as if catching her breath. Makes intermittent eye contact, looks away when describing how she is feeling. Answers only what is asked, does not volunteer information. Occasionally puts hand on chest as if checking that her heart is still there. Leg movement is restless.",
+        "attitude_toward_medical_system": "Trusts it in principle but fears the administrative consequences. Believes doctors will judge her for being careless. Worried about cost. Wants to be seen as a good patient who does not cause trouble.",
+        "key_person": "her sister, who is in hospice care and does not know Jennifer came to the ER",
+        "key_person_relationship": "They are close in age (sister is 37) and have always been emotionally intimate. Jennifer has not called her to explain why she is late getting home because she does not want to add to her sister's suffering."
+      },
+      "reveal_sequence": [
+        {
+          "trigger": "direct_question",
+          "trigger_detail": "asking specifically 'were you doing anything different during the drive? Any stops? Any incidents?'",
+          "information": "Jennifer will initially say no, then after 10 seconds will say 'there was a dog on the highway.' Then after another pause: 'I had to swerve. I hit the guardrail.'",
+          "patient_language": "There was a dog. I hit the guardrail but it was low speed, I don't think I'm hurt from that. But yeah, I've been feeling weird since.",
+          "emotional_register": "ashamed and afraid"
+        },
+        {
+          "trigger": "physical_exam",
+          "trigger_detail": "careful examination of chest, abdomen, ribs for trauma",
+          "information": "There is mild bruising on the left rib cage consistent with steering wheel contact. No rib fractures on exam, but the mechanism is now clarified.",
+          "patient_language": "I didn't think it was hard enough to matter",
+          "emotional_register": "defensive"
+        },
+        {
+          "trigger": "direct_question",
+          "trigger_detail": "asking about medications, specifically oral contraceptives",
+          "information": "Patient will admit she started Yasmin two weeks ago for 'period control' but did not see the connection to the breathing. She will not initially know she has Factor V Leiden and will not volunteer family history of clots until asked specifically.",
+          "patient_language": "Yeah, I'm on the pill. I didn't think that mattered. My mom had a blood clot once but it was in her leg and it was from traveling.",
+          "emotional_register": "matter-of-fact, not realizing the significance"
+        },
+        {
+          "trigger": "trust_established",
+          "trigger_detail": "after 20 minutes of sustained presence without judgment from a care provider",
+          "information": "Jennifer will explain that she drove to say goodbye to her sister who is in hospice and that she should have been paying better attention to the road but she could not stop thinking about the visit.",
+          "patient_language": "My sister called me because she's dying. So I drove up yesterday. I should have been paying attention but I just kept thinking about how she looked, and then the dog was suddenly there.",
+          "emotional_register": "grief breaking through the surface"
+        }
+      ],
+      "outcome_trajectory": {
+        "correct_treatment": "Stat CTA chest to rule out PE. If PE confirmed: anticoagulation with enoxaparin or unfractionated heparin, warfarin bridging, counseling regarding OCP discontinuation and Factor V Leiden screening for family, counseling regarding future thrombosis risk. Close monitoring of oxygenation. Consideration of IVC filter if contraindication to anticoagulation. Social work referral for family support during sister's EOL transition.",
+        "correct_outcome": "PE identified and anticoagulated. Patient hospitalized for monitoring. Discharged after 48 hours on warfarin with outpatient hematology appointment and strong recommendation to stop OCP. Genetic testing reveals Factor V Leiden heterozygous. Family members screened. Sister's hospice team is notified of Jennifer's status and coordinates Jennifer's discharge with sister's comfort care plan.",
+        "missed_diagnosis": "Patient sent home with reassurance after normal CXR and explanation of SOB as anxiety. That evening, patient has massive hemoptysis and profound hypoxia, calls 911, transported back to hospital now with PE + ARDS picture. Intubated, ICU course, expensive and dangerous.",
+        "resident_catches_it_unsupervised": "Resident is troubled by O2 sat of 93% in a young person with clear CXR and orders d-dimer as screening test. D-dimer is elevated. Resident escalates to attending with concern for PE despite reassuring presentation. Attending confirms clinical suspicion, orders CTA. PE identified. Appropriate management initiated.",
+        "resident_misses_it_unsupervised": "Resident attributes SOB to anxiety + trauma from accident, reassures patient, normal CXR + normal vitals + low-risk appearance lead to discharge with recommendation to follow up with PCP. Patient goes home, collapses at work three days later.",
+        "disposition": "admit-floor",
+        "follow_up_hook": "Sister dies during Jennifer's hospital stay. Jennifer is visited by hospice social worker while in ED to coordinate notification. Becomes a trauma signature case for the program \u2014 the visit that happened while Jennifer was fighting for her life."
+      },
+      "systemic_flags": {
+        "world_event_connection": "represents young working person with inadequate knowledge of medication risks; OCP use in young women is common and clinicians must actively screen for VTE risk; this is a systems failure of primary care lack of screening",
+        "shift_case_connection": null,
+        "return_patient": false,
+        "prior_visit_summary": null,
+        "future_seed": "Jennifer's sister's death will become an invisible thread in the department over next weeks \u2014 staff will see Jennifer return for follow-up labs and outpatient appointments, will hear about sister in passing conversations, will represent one of the human costs of missed diagnosis"
+      }
+    },
+    {
+      "case_id": "SHIFT_20260317_0118_07",
+      "narrative_hook": "A 19-year-old with the flu who actually just needs to go home and rest, but she keeps coughing and her mother will not stop worrying, and neither of them wants to admit why her mother is really frightened.",
+      "presenting_layer": {
+        "chief_complaint": "cough, fever, body aches x 2 days",
+        "age": 19,
+        "sex": "F",
+        "vitals": {
+          "hr": 102,
+          "bp_systolic": 112,
+          "bp_diastolic": 70,
+          "rr": 20,
+          "temp_f": 101.8,
+          "o2_sat": 96,
+          "gcs": 15
+        },
+        "triage_note": "19F with URI symptoms, fever, mild tachycardia, O2 sat normal, appears unwell but not toxic",
+        "acuity": 4,
+        "arrival_method": "family drop-off",
+        "time_in_waiting_room_minutes": 22
+      },
+      "medical_truth": {
+        "true_diagnosis": "Influenza with constitutional symptoms and mild bronchitis, self-limited viral illness",
+        "supporting_findings": [
+          "fever 101.8 is consistent with viral illness",
+          "body aches are classic influenza symptom",
+          "cough with 2-day duration in season of respiratory illness is consistent with flu",
+          "tachycardia (102) is expected response to fever and illness",
+          "normal O2 sat rules out significant respiratory compromise",
+          "normal respiratory rate (20) is only mildly elevated for fever",
+          "patient appears unwell but not acutely toxic"
+        ],
+        "what_labs_show": "rapid influenza test positive (type A). CBC shows mild lymphocytic predominance consistent with viral illness. No left shift. No band forms. WBC 7.2 (normal). CMP normal. No evidence of secondary bacterial infection.",
+        "what_imaging_shows": null,
+        "time_sensitivity": false,
+        "time_window_minutes": null,
+        "red_herrings": [
+          "Mother's extreme anxiety could be misinterpreted as the patient being sicker than she actually is",
+          "Fever of 101.8 is high enough to worry someone unfamiliar with viral illness",
+          "Cough could worry someone about pneumonia",
+          "The fact that mother insisted on coming to ER could suggest she knows something the patient is not saying"
+        ],
+        "classic_miss_reason": "No miss in this case. This is a straightforward viral illness. The diagnostic trap is not medical \u2014 it is social. The trap is that the provider might spend excessive resources trying to find something seriously wrong because the mother's anxiety is so evident, when in fact the young woman has the flu and needs supportive care. The miss would be ordering unnecessary imaging or labs or prescribing antibiotics inappropriately because the mother's worry was misinterpreted as clinical indication."
+      },
+      "patient_profile": {
+        "first_name": "Maria",
+        "last_name": "Delgado",
+        "occupation": "college sophomore, works part-time at retail",
+        "living_situation": "lives on campus during school year, but came home for two weeks in March because her father had 'a health scare' last month and her mother wanted her to visit",
+        "why_they_came_today": "Maria woke up yesterday with a sore throat and body aches and has fever and cough today. Her mother immediately brought her to the ER even though Maria said she was sure it was just the flu and would be fine with rest. Her mother is unusually anxious about Maria's symptoms.",
+        "what_theyre_not_saying": "Maria's father had a cardiac event (NSTEMI) one month ago and is still recovering. He is home but has limitations. Maria's mother has been terrified since his event that something will happen to one of the children. She brought Maria to the ER for the flu as a way to feel like she is controlling something in a world where she just felt how out of control things are. Maria knows this is not rational but does not want to upset her mother further by refusing the ER visit.",
+        "what_they_fear": "Maria: that her mother's anxiety means something is actually wrong with her that she cannot feel. That her father is more sick than she has been told and her mother is panicking. That she will be trapped in the hospital when she has so much to do at school. Her mother: that Maria will get sicker and that she will miss something serious. That her family is fragile and that she cannot protect them anymore.",
+        "what_they_are_protecting": "Maria: her sense that the world is still normal and manageable. Her mother: the fiction that vigilance can prevent bad things from happening. Both: the fear that talking about her father's illness will make it more real.",
+        "communication_style": "Maria is polite and cooperative but slightly irritated. She answers questions directly but briefly. She rolls her eyes slightly at her mother's interjections. She says things like 'I told mom it was probably just the flu.' Her mother frequently adds information: 'But we wanted to be sure,' 'Her fever was 102 earlier,' 'She was coughing all night.' Mother's speech is rapid and anxious.",
+        "attitude_toward_medical_system": "Maria: trusts it but sees it as unnecessary in this case. Views the ER as a place for real emergencies. Her mother: views it as the place where she can confirm her daughter is fine and therefore feel less anxious.",
+        "key_person": "her father, who is not present but is why her mother is anxious",
+        "key_person_relationship": "He suffered a cardiac event one month ago. He is home and recovering. Maria's mother has been anxious about family health since his event. She is using Maria's visit to the ER as a way to regain sense of control."
+      },
+      "reveal_sequence": [
+        {
+          "trigger": "volunteered",
+          "trigger_detail": "mother volunteers information about when Maria first got sick",
+          "information": "Mother will mention that Maria came home from school because 'dad had a health scare' and now she is sick on top of everything else.",
+          "patient_language": "Mom, I told you, I'm fine. I'm sure it's just the flu.",
+          "emotional_register": "Maria: frustrated. Mother: worried and speaking quickly."
+        },
+        {
+          "trigger": "direct_question",
+          "trigger_detail": "asking mother separately 'how are you doing with everything?' with clear reference to the recent stressor",
+          "information": "Mother will become tearful and explain about father's heart attack last month and how scared she was and how she is terrified of something happening to one of the kids.",
+          "patient_language": "I know it's probably just the flu. But I can't... I can't lose anyone else. My mother died when I was young and I just need to know everyone is okay.",
+          "emotional_register": "grieving and scared"
+        },
+        {
+          "trigger": "trust_established",
+          "trigger_detail": "clinician validating mother's fear as a normal response while also reassuring about Maria",
+          "information": "Mother will calm down and become more realistic. She will acknowledge that Maria is actually fine, just has the flu.",
+          "patient_language": "I'm sorry. I know I'm being anxious. She probably just needs rest.",
+          "emotional_register": "shame and relief"
+        }
+      ],
+      "outcome_trajectory": {
+        "correct_treatment": "Symptomatic care. Fluids, rest, acetaminophen for fever and body aches. Antiviral therapy (oseltamivir) consideration given that she is within 48 hours of symptom onset, though not indicated for uncomplicated flu in otherwise healthy 19-year-old. Clear communication that this is self-limited viral illness that will resolve in 5-7 days. Counseling about when to return (persistent high fever, difficulty breathing, chest pain, confusion). Recommendation to rest at home rather than return to school/work for 24-48 hours.",
+        "correct_outcome": "Patient reassured. Mother reassured. Maria goes home and rests. Recovers over 5-7 days as expected. Returns to school. Clinician takes 5 minutes with mother to discuss anxiety management and to recommend that mother discuss her ongoing anxiety with her primary care provider given the stress of father's recent cardiac event.",
+        "missed_diagnosis": "Not applicable \u2014 this is straightforward flu. The miss would be inappropriate workup: CXR to rule out pneumonia, unnecessary antibiotics, unnecessary IV fluids, admission for observation. This would extend the patient's stay, create false sense of danger, reinforce mother's anxiety, and waste resources.",
+        "resident_catches_it_unsupervised": "Resident quickly identifies influenza, reassures patient and mother, explains expected course, provides clear return precautions, discharges with supportive care instructions. Resident takes 5 minutes to acknowledge mother's anxiety and normalizes it as a response to stress.",
+        "resident_misses_it_unsupervised": "Resident is influenced by mother's anxiety and orders CXR 'to be safe,' orders CBC 'to check for secondary infection,' administers IV fluids 'to help with fever,' and keeps patient for observation 2-3 hours longer than necessary. Mother feels validated in her worry. Patient feels more sick. Hospital resources consumed unnecessarily.",
+        "disposition": "discharge",
+        "follow_up_hook": "Mother will likely bring Maria back in 3-4 days if fever persists longer than expected or if mother's anxiety spikes again. This represents an opportunity for intervention: discussing mother's ongoing anxiety, recommending mental health support, creating safety plan for what constitutes actual emergency vs. expected viral illness course."
+      },
+      "systemic_flags": {
+        "world_event_connection": "respiratory season uptick means multiple families will come in with similar presentation; each family's anxiety will be influenced by their own trauma/vulnerability; this case represents the non-medical burden placed on ED when families are frightened",
+        "shift_case_connection": null,
+        "return_patient": false,
+        "prior_visit_summary": null,
+        "future_seed": "If this encounter goes well, the family may develop increased trust in the medical system and the mother may follow up with her own primary care provider. If it goes poorly (unnecessary workup + reinforced anxiety), the mother will become a frequent flyer bringing Maria for minor symptoms. Long-term outcome of this interaction is not medical \u2014 it is behavioral. This is the type of case where good care has downstream effects on ED utilization."
+      }
+    },
+    {
+      "case_id": "SHIFT_20260317_0118_08",
+      "narrative_hook": "A 52-year-old factory supervisor arrived by ambulance after collapsing on the loading dock at shift change. His coworker rode in with him and keeps saying he was fine five minutes before. The patient is alert but reluctant to discuss what happened.",
+      "presenting_layer": {
+        "chief_complaint": "Syncope with post-ictal confusion",
+        "age": 52,
+        "sex": "M",
+        "vitals": {
+          "hr": 118,
+          "bp_systolic": 142,
+          "bp_diastolic": 88,
+          "rr": 22,
+          "temp_f": 98.6,
+          "o2_sat": 94,
+          "gcs": 14
+        },
+        "triage_note": "Male collapsed at work, brief LOC, now confused. No witnessed seizure. Hit head on fall. Coworker reports sudden onset.",
+        "acuity": 2,
+        "arrival_method": "ambulance",
+        "time_in_waiting_room_minutes": 0
+      },
+      "medical_truth": {
+        "true_diagnosis": "Acute coronary syndrome (NSTEMI) with cardiogenic syncope secondary to ventricular arrhythmia during demand ischemia",
+        "supporting_findings": [
+          "Troponin elevation (0.18 ng/mL, normal <0.04)",
+          "EKG shows ST depression in leads II, III, aVF with T wave inversion",
+          "Subsequent episodes of brief bradycardia (40s) followed by compensatory tachycardia",
+          "History of hypertension, never formally diagnosed\u2014treated irregularly with lisinopril he buys sporadically",
+          "Coworker reports he'd been having 'indigestion' all day but kept working"
+        ],
+        "what_labs_show": "Elevated troponin, mild troponin kinase elevation, CK-MB positive. CBC and CMP unremarkable except for borderline glucose 108 suggesting stress response.",
+        "what_imaging_shows": "EKG immediately shows inferior STEMI evolution. Chest X-ray shows mild cardiomegaly. Cardiac catheterization reveals 90% stenosis of right coronary artery with thrombus.",
+        "time_sensitivity": true,
+        "time_window_minutes": 120,
+        "red_herrings": [
+          "Head strike during fall\u2014tempting to focus on neuro cause of syncope",
+          "Post-ictal confusion without seizure activity\u2014can be mimicked by post-ischemic altered mental status",
+          "Initial O2 sat of 94 and tachypnea\u2014could suggest pulmonary cause"
+        ],
+        "classic_miss_reason": "Anchoring bias on the mechanism (syncope from head injury or simple vasovagal event) rather than asking why a previously well man lost consciousness without prodrome. The coworker's report of sudden onset should trigger immediate cardiac workup, but the witnessed collapse focuses attention on neuro."
+      },
+      "patient_profile": {
+        "first_name": "Marcus",
+        "last_name": "Chen",
+        "occupation": "Factory supervisor, loading dock operations",
+        "living_situation": "Married, two adult children, lives in Riverside neighborhood near the plant",
+        "why_they_came_today": "He did not choose to come. His coworker called 911 immediately. Marcus would have called this 'nothing' had he stayed conscious.",
+        "what_theyre_not_saying": "He's had substernal chest pressure for three weeks\u2014he thought it was acid reflux or stress from the new shift schedule. He did not go to the doctor because he has no insurance and cannot afford to miss work. He took antacids he bought at CVS.",
+        "what_they_fear": "That this will cost more than his family can handle. That he will lose his job if he is not back in two days. That his wife will find out he never filled the blood pressure prescription she kept reminding him about.",
+        "what_they_are_protecting": "His image as the person who powers through. The family's fragile financial stability. The fact that the factory has already cut benefits once.",
+        "communication_style": "Answers questions directly but minimizes severity with each answer. 'It was nothing.' 'Just felt dizzy.' 'I'm fine now.' When pressed on the chest discomfort, he becomes quietly stubborn\u2014looking away, answering in shorter sentences, as if detailed answers will make it more real.",
+        "attitude_toward_medical_system": "Distrusts emergency medicine. Has delayed care in the past. Believes hospitals are for 'other people.' Views his body as something that should work without intervention.",
+        "key_person": "His wife, Diana. She is not present but is being contacted. She will arrive angry and frightened in the next 20 minutes.",
+        "key_person_relationship": "Marriage of 28 years. She manages the household finances. She has been asking him to see a doctor for six months about his blood pressure. He has repeatedly said 'later.'"
+      },
+      "reveal_sequence": [
+        {
+          "trigger": "direct_question",
+          "trigger_detail": "Attending asks about chest discomfort in the past week",
+          "information": "He admits to 'some pressure' in the past three weeks, thought it was indigestion",
+          "patient_language": "It was nothing. Just pressure when I bent over to move boxes. Went away after I took a Tums.",
+          "emotional_register": "Defensive. Avoiding eye contact. Slightly irritated by the line of questioning."
+        },
+        {
+          "trigger": "test_result",
+          "trigger_detail": "Troponin results returned elevated",
+          "information": "The cardiac enzyme elevation confirms ACS. Marcus realizes this is not indigestion.",
+          "patient_language": "That can't be right. I've been fine. Just stressed from work.",
+          "emotional_register": "Shock. Initial denial. Then quiet acceptance of something he's been avoiding acknowledging."
+        },
+        {
+          "trigger": "family_present",
+          "trigger_detail": "Wife Diana arrives and immediately speaks to the nurse",
+          "information": "Diana reveals he has been having 'chest problems' for weeks and refused to see anyone. She has been fighting with him about his untreated hypertension. She brings his old blood pressure logs showing consistent readings of 160+/95+.",
+          "patient_language": "Marcus: 'She's exaggerating.' Diana: 'You've been complaining about your chest since before Christmas. I found the antacid bottles in the garage.'",
+          "emotional_register": "Marcus: ashamed, angry at himself, fearful. Diana: frightened, vindicated, furious at his procrastination."
+        }
+      ],
+      "outcome_trajectory": {
+        "correct_treatment": "Immediate EKG (done), heparin, loading dose of dual antiplatelet therapy (aspirin and P2Y12 inhibitor), cardiology consult, cardiac catheterization with PCI to right coronary artery, admission to telemetry",
+        "correct_outcome": "Successful PCI with stent placement. Anterior wall NSTEMI extends to inferior. Ejection fraction preserved at 48%. Discharged on hospital day 3 with cardiology follow-up, cardiac rehab referral, and strict medications. Returns to modified duty in 6 weeks. Survives intact.",
+        "missed_diagnosis": "If the team focuses on neuro workup after head strike (CT head, neurology consult) without immediate EKG and cardiac enzymes, the window for optimal intervention closes. Second missed opportunity: if troponin is drawn but not resulted quickly and patient is discharged after 'negative' neuro exam.",
+        "resident_catches_it_unsupervised": "A resident with good chest pain algorithm reflexively orders EKG and troponin on a 52-year-old with syncope regardless of mechanism. Sees the EKG changes. Calls cardiology immediately. Does not wait for troponin result.",
+        "resident_misses_it_unsupervised": "A resident anchors on the fall mechanism, orders head CT and neuro checks, thinks 'syncope from hitting the ground,' clears neuro, observes for a few hours, discharges with head injury precautions when the patient 'seems fine.' Patient has another arrhythmia at home 8 hours later. His wife finds him unconscious. Second ambulance call. Outcome still likely good but window is narrower.",
+        "disposition": "admit-icu",
+        "follow_up_hook": "Marcus will be in the ICU for telemetry and stabilization. He will have conversations with the cardiologist about why this happened and what his life looks like now. Diana will have a conversation with the social worker about medication costs and the family's insurance situation. This is the hospital's first introduction to Marcus Chen's life, which is about to change significantly."
+      },
+      "systemic_flags": {
+        "world_event_connection": "Marcus works in the manufacturing sector that has declined in Riverside over the past decade. His lack of insurance and his irregular medication access are direct consequences of that decline. He is exactly the patient Riverside General serves.",
+        "shift_case_connection": null,
+        "return_patient": false,
+        "prior_visit_summary": null,
+        "future_seed": "Marcus Chen will become a long-term cardiology patient at Riverside General. His wife will advocate fiercely for his medications and follow-ups. Possible future case: Marcus returns 8 months later with heart failure exacerbation because he reduced his diuretic to save money."
+      }
+    },
+    {
+      "case_id": "SHIFT_20260317_0118_09",
+      "narrative_hook": "A 67-year-old woman who has been sleeping rough for eight weeks came in complaining of cough. She is alert and almost conversational, but she is clearly cold, and the overnight temperatures have dropped into the 40s. She appears underfed.",
+      "presenting_layer": {
+        "chief_complaint": "Productive cough \u00d7 5 days, mild dyspnea",
+        "age": 67,
+        "sex": "F",
+        "vitals": {
+          "hr": 92,
+          "bp_systolic": 128,
+          "bp_diastolic": 74,
+          "rr": 18,
+          "temp_f": 98.2,
+          "o2_sat": 96,
+          "gcs": 15
+        },
+        "triage_note": "Unhoused woman with cough and low-grade fever. Productive of yellowish sputum. Appears well-nourished at first glance but on exam shows significant weight loss. No acute distress.",
+        "acuity": 3,
+        "arrival_method": "walk-in",
+        "time_in_waiting_room_minutes": 45
+      },
+      "medical_truth": {
+        "true_diagnosis": "Pulmonary tuberculosis (TB), active disease with cavitary involvement in right upper lobe",
+        "supporting_findings": [
+          "Sputum smear positive for acid-fast bacilli (AFB)",
+          "CXR shows classic cavitary lesion in right upper lobe with surrounding consolidation",
+          "Low-grade afternoon fever (temp typically 99.5-100.2 F)",
+          "Night sweats (patient reports soaking clothes every night for past two weeks)",
+          "Unintentional weight loss of approximately 25 pounds over 8 weeks",
+          "TB risk factors: homeless, likely immunocompromised from malnutrition, recent cold stress"
+        ],
+        "what_labs_show": "CBC shows mild anemia (Hgb 10.8, normal for her likely ~12.5), slightly elevated WBC 11.2, normal differential. Albumin 2.8 (significantly low, normal >3.5) indicating malnutrition and chronic disease. Blood glucose 128 (mildly elevated, stress response). TB sputum smear positive. TB culture will confirm but takes weeks.",
+        "what_imaging_shows": "Chest X-ray shows cavitary lesion right upper lobe with surrounding infiltrate. No pleural effusion. Minimal findings on left.",
+        "time_sensitivity": true,
+        "time_window_minutes": 240,
+        "red_herrings": [
+          "Vital signs are almost reassuringly normal\u2014easy to anchor on 'she looks okay'",
+          "No acute respiratory distress\u2014she is compensating well",
+          "Productive cough could be simple bronchitis in an older person",
+          "Weight loss could be attributed to homelessness and poor nutrition rather than active disease",
+          "Normal temperature at this specific moment\u2014fever is often low and intermittent in TB"
+        ],
+        "classic_miss_reason": "TB is not in the differential for a walk-in with a cough in many EDs because TB is rare in well-housed populations. Homelessness is the key risk factor that should trigger it, but a team under throughput pressure may see 'unhoused woman, cough, probably pneumonia, treat empirically and discharge to shelter.' The normal vital signs and lack of acute distress reinforce this. The weight loss is noticed but attributed to 'obviously she hasn't been eating well.' No one orders a TB sputum or CXR."
+      },
+      "patient_profile": {
+        "first_name": "Patricia",
+        "last_name": "DeMarco",
+        "occupation": "Retired teacher (taught elementary school 32 years), now unhoused",
+        "living_situation": "Sleeping in shelters and rough encampments in Riverside for 8 weeks. Was evicted from subsidized housing after her pension was reduced when her former school district faced budget crisis.",
+        "why_they_came_today": "The cold nights forced her to move. She made the decision last night at 4 AM when the temperature dropped and she was not warm enough in the shelter. She walked to the hospital because it is warm and has bathrooms. She came to triage because a social worker at the shelter told her that persistent cough needs to be checked, especially in someone unhoused.",
+        "what_theyre_not_saying": "She has had this cough for probably 6-8 weeks, not just 5 days. She is acutely aware that if she has something contagious, she will be forced to leave the shelter. She is terrified of being alone outside in this cold. She has not slept more than 2-3 hours in a row in 8 weeks. She has a daughter in another state who does not know she is homeless\u2014Patricia has been using a PO box for mail and vague language about 'between places.'",
+        "what_they_fear": "Isolation. Abandonment. That her daughter will find out and feel obligated to disrupt her own life. That the hospital will make decisions for her that include separation from her few belongings. That she will die alone.",
+        "what_they_are_protecting": "Her independence. Her relationship with her daughter. Her sense of dignity despite circumstances. The fiction that this is temporary.",
+        "communication_style": "Speaks clearly and with education evident in her word choice\u2014she deflects her current circumstances with practiced ease. Asks questions about the hospital's procedures with genuine curiosity rather than advocacy for herself. When asked about symptoms, she provides accurate information but minimizes the timeline. Makes eye contact. Laughs slightly when addressing her own homelessness as if it is an external fact rather than an emergency.",
+        "attitude_toward_medical_system": "Respectful to the point of deference. Does not want to be a burden. Views the medical system as something that works for 'people like I used to be.' Grateful for attention, which itself is a red flag\u2014she is not used to being noticed.",
+        "key_person": "Her daughter Rachel, 38, lives in Portland. Rachel thinks her mother is 'staying with friends' during a 'transition period.' Patricia calls her on Thursdays from the library's public phone.",
+        "key_person_relationship": "Close but geographically distant. Patricia would do anything to shield Rachel from her current reality. Rachel would mobilize her entire life if she knew the truth."
+      },
+      "reveal_sequence": [
+        {
+          "trigger": "physical_exam",
+          "trigger_detail": "Attending performs respiratory exam and listens carefully to breath sounds",
+          "information": "Crackles in right upper lobe. When examined carefully, patient admits to night sweats for past 2-3 weeks.",
+          "patient_language": "Oh, yes. Every night. I sleep in my clothes now even though it's cold. I try to wash them during the day at the shelter but they never fully dry.",
+          "emotional_register": "Matter-of-fact. She has been normalizing this as part of homelessness rather than as a symptom."
+        },
+        {
+          "trigger": "direct_question",
+          "trigger_detail": "Attending asks specifically about duration of cough and when it started",
+          "information": "Patient admits cough has been present for 'maybe two months, maybe longer' and has progressively worsened",
+          "patient_language": "I wasn't counting days the same way before. Time moves differently. But yes, it's been since I... since I came to stay at the shelter.",
+          "emotional_register": "Embarrassment. Shame about losing track of time itself, which feels like loss of identity."
+        },
+        {
+          "trigger": "test_result",
+          "trigger_detail": "Sputum smear returns positive for AFB",
+          "information": "Active TB disease confirmed. Patient will need isolation and lengthy treatment regimen.",
+          "patient_language": "Oh. Oh my. That's... I had no idea. I thought it was just from the cold, from sleeping outside.",
+          "emotional_register": "Shock, then quiet acceptance. She is oddly relieved\u2014at least now there is an explanation and a pathway to care, even though the pathway is complicated."
+        },
+        {
+          "trigger": "trust_established",
+          "trigger_detail": "After results, attending spends time explaining diagnosis and treatment with no rush",
+          "information": "Patricia admits she has not told her daughter about being homeless. She is terrified her daughter will feel obligated to take her in and disrupt her life. She is also terrified of being separated from her belongings.",
+          "patient_language": "Rachel has her own family. She's just starting to feel stable. I can't... I won't do that to her. And if I go somewhere, who watches my things? Everything I have is in a bag under a bridge.",
+          "emotional_register": "Protective, afraid, pragmatic in a way that breaks your heart."
+        }
+      ],
+      "outcome_trajectory": {
+        "correct_treatment": "Isolation protocol, TB sputum culture confirmation (awaiting results), start anti-TB therapy (RIPE: rifampin, isoniazid, pyrazinamide, ethambutol), directly observed therapy (DOT) through public health, case management for housing and social services, contact tracing for shelter residents",
+        "correct_outcome": "Patricia is admitted to isolation. She receives 6 months of anti-TB therapy through DOT. Riverside General's social worker connects her with transitional housing programs. Her daughter is eventually told (with Patricia's permission) and helps coordinate follow-up care. Patricia recovers fully from TB. She does not return to homelessness because the system now knows her case and stays connected.",
+        "missed_diagnosis": "If the team treats her as 'uncomplicated pneumonia' with 5 days of cough and discharges her: (1) She continues spreading TB to others at the shelter. (2) She does not receive proper treatment. (3) She likely returns in 4 weeks with worsening illness or sepsis. (4) TB becomes drug-resistant if she is treated with wrong antibiotics.",
+        "resident_catches_it_unsupervised": "A resident is taught to have high suspicion for TB in homeless patients. Orders CXR as part of routine workup for respiratory symptoms. Sees the classic cavitary lesion. Orders TB sputum and puts patient in respiratory isolation immediately. Calls public health. Starts treatment while awaiting confirmation. Averts community spread.",
+        "resident_misses_it_unsupervised": "A resident sees 'cough in homeless woman, probably aspiration pneumonia or simple infection.' Prescribes oral fluoroquinolone, discharge instructions, 'follow up with your primary care doctor'\u2014knowing she has no address, no phone, no regular doctor. Patricia never follows up. She deteriorates at the shelter. She returns to the ED in 4 weeks septic.",
+        "disposition": "admit-floor",
+        "follow_up_hook": "Patricia's case will trigger conversations at Riverside General about TB surveillance in the homeless population. The shelter will be contacted for contact tracing. This will be the first of several unhoused TB patients the hospital sees this season as the cold worsens conditions."
+      },
+      "systemic_flags": {
+        "world_event_connection": "Patricia is homeless because the pension from her school district was reduced due to budget crisis\u2014a direct echo of the manufacturing job losses described in the world state. Riverside General serves a catchment where economic pressure has downstream effects on health.",
+        "shift_case_connection": null,
+        "return_patient": false,
+        "prior_visit_summary": null,
+        "future_seed": "TB cluster may emerge at the shelter Patricia is staying in. Two to three other unhoused individuals from the same shelter may present in the next 2-4 weeks with respiratory symptoms, leading to a public health investigation and possible future case volume spike."
+      }
+    },
+    {
+      "case_id": "SHIFT_20260317_0118_10",
+      "narrative_hook": "A 34-year-old woman came in with her best friend, who insisted she come. She says she has 'the flu,' and she wants medication so she can go home. She has a one-year-old at a neighbor's place and needs to get back. She is speaking quickly and seems irritated at being here.",
+      "presenting_layer": {
+        "chief_complaint": "Fever, cough, body aches \u00d7 3 days",
+        "age": 34,
+        "sex": "F",
+        "vitals": {
+          "hr": 102,
+          "bp_systolic": 118,
+          "bp_diastolic": 72,
+          "rr": 20,
+          "temp_f": 101.8,
+          "o2_sat": 97,
+          "gcs": 15
+        },
+        "triage_note": "Woman with classic URI symptoms, fever, presents with friend. Patient minimizing severity. Vital signs show mild tachycardia and tachypnea. Denies shortness of breath.",
+        "acuity": 3,
+        "arrival_method": "family drop-off",
+        "time_in_waiting_room_minutes": 20
+      },
+      "medical_truth": {
+        "true_diagnosis": "Acute HIV infection (primary HIV seroconversion illness) presenting as acute retroviral syndrome",
+        "supporting_findings": [
+          "Fever, myalgia, cough, lymphadenopathy (cervical and axillary)",
+          "High viral load in acute phase (>100,000 copies/mL)",
+          "Negative antibody test but positive by 4th generation antigen/antibody test and PCR",
+          "Recent unprotected sexual exposure 3-4 weeks prior (she is hesitant to disclose)",
+          "Rash on trunk and face (she has been covering with makeup, attributes to 'stress breakout')",
+          "Mild thrombocytopenia (platelets 118, normal 150-400) from viral effects",
+          "Transaminitis: AST 78, ALT 92 (mild, but present)"
+        ],
+        "what_labs_show": "CBC shows thrombocytopenia 118, mild lymphocytosis 4.8. Transaminitis as above. Standard HIV antibody test is NEGATIVE (critical\u2014this is the trap). Fourth-generation antigen/antibody test is POSITIVE. HIV RNA PCR shows viral load 180,000 copies/mL. This is acute seroconversion illness.",
+        "what_imaging_shows": "CXR shows mild peribronchial infiltrates, no consolidation. Can appear viral or normal.",
+        "time_sensitivity": true,
+        "time_window_minutes": 180,
+        "red_herrings": [
+          "Negative standard HIV antibody test\u2014antibodies have not developed yet but antigen is present",
+          "Presentation identical to influenza or other viral syndrome",
+          "Mild transaminitis and mild thrombocytopenia could be EBV or other common virus",
+          "She denies risk factors when asked directly (defensive, not lying\u2014just hasn't contextualized her risk)",
+          "Her friend's insistence she come seems like typical friend anxiety rather than marker of something serious"
+        ],
+        "classic_miss_reason": "Anchoring bias on 'flu season.' A provider sees fever, cough, myalgia in autumn and thinks influenza. The negative standard HIV test is falsely reassuring\u2014many providers do not reflexively order 4th generation or antigen tests when antibody is negative. The patient herself does not identify as high-risk and does not volunteer information about sexual exposure. The encounter is fast and transactional. She gets Tamiflu and discharge instructions."
+      },
+      "patient_profile": {
+        "first_name": "Jessica",
+        "last_name": "Martinez",
+        "occupation": "Dental hygienist, works 4 days a week at two different practices",
+        "living_situation": "Lives with her one-year-old daughter Maya in a small apartment with her sister and the sister's two children. Recently separated from Maya's father.",
+        "why_they_came_today": "Her best friend Tanya noticed she seemed really sick yesterday and kept insisting she get checked. Jessica tried to brush it off but Tanya took her keys and told her she was taking her to the ED. Jessica reluctantly agreed because she thought it would be faster than arguing.",
+        "what_theyre_not_saying": "She had unprotected sex four weeks ago with a man she met at a bar\u2014a one-time thing, emotionally complicated, she has not told anyone. She was in a vulnerable place during the separation. She convinced herself it was 'fine' because he seemed 'clean.' She is terrified that if she has anything serious, her sister will somehow blame her or suggest she is an unfit mother. She is already one crisis away from losing her apartment.",
+        "what_they_fear": "That this is serious. That it will affect her ability to work or take care of Maya. That Tanya will find out what she has been ashamed to tell her. That her sister will use this against her in some future custody argument (the sister is sometimes jealous of her closeness with the children). That she will have to tell Maya's father and he will use it to fight for custody.",
+        "what_they_are_protecting": "Her identity as someone who has 'gotten it together' after the separation. Her image as a responsible mother. The secret of the sexual encounter. Her stability in her sister's home.",
+        "communication_style": "Speaks in rapid-fire sentences that seem designed to pack information in and move the conversation forward. Does not make eye contact with providers but does with her friend. Answers questions minimally and pivots back to 'I just need to get better and get home.' Laughs nervously when discussing her symptoms. When asked about sexual history, she looks away and gives a rehearsed-sounding 'nothing recent.'\n",
+        "attitude_toward_medical_system": "Distrusts it. Fears judgment. Views medical encounters as transactions that happen to her rather than interactions. Wants to be fixed and released, not explored.",
+        "key_person": "Tanya, her best friend for 18 years. Tanya is in the waiting room and is the one who forced Jessica to come.",
+        "key_person_relationship": "Tanya is Jessica's rock. They met in high school. Tanya is single with no children and has been Jessica's support during the separation. Tanya intuits that something is wrong and has not left."
+      },
+      "reveal_sequence": [
+        {
+          "trigger": "physical_exam",
+          "trigger_detail": "Attending notes rash on trunk when performing thorough skin exam",
+          "information": "Patient has maculopapular rash on trunk and face, which she has been covering with makeup. She attributes it to stress.",
+          "patient_language": "I thought it was just a breakout from stress. The separation has been hard. I haven't been sleeping well.",
+          "emotional_register": "Defensive. Trying to rationalize it away."
+        },
+        {
+          "trigger": "direct_question",
+          "trigger_detail": "Attending performs lymph node exam, finds significant cervical and axillary lymphadenopathy",
+          "information": "When palpating, attending finds enlarged lymph nodes and asks about any recent sore throat or URI symptoms beyond what's described",
+          "patient_language": "No, nothing like that. Just felt generally bad, you know? Like everything hurts.",
+          "emotional_register": "Uncomfortable being touched, uncomfortable with the attention."
+        },
+        {
+          "trigger": "test_result",
+          "trigger_detail": "Standard HIV antibody test returns negative, but attending has high suspicion and orders 4th generation antigen/antibody test",
+          "information": "Fourth generation test is POSITIVE. Attendee also notes mild thrombocytopenia and transaminitis on CBC/CMP.",
+          "patient_language": "That doesn't make sense. I haven't... I mean, that can't be right.",
+          "emotional_register": "Shock. Denial. Realization that this is not 'the flu.'"
+        },
+        {
+          "trigger": "trust_established",
+          "trigger_detail": "Attending takes time to explain acute seroconversion illness in non-judgmental way, does not rush",
+          "information": "Patient admits to unprotected sexual encounter 4 weeks ago that she had not disclosed. She is terrified of her sister finding out. She is more terrified that Tanya will judge her.",
+          "patient_language": "It was just one time. It was stupid. I wasn't thinking. I was... I wasn't in a good place. He said he was clean. I know that's dumb. I know it's my fault.",
+          "emotional_register": "Shame, guilt, fear. She is ready to accept blame that is not entirely hers to accept."
+        },
+        {
+          "trigger": "family_present",
+          "trigger_detail": "Tanya is brought into the room to discuss next steps",
+          "information": "Tanya immediately says 'I knew something was wrong' and holds Jessica's hand. She is not judgmental. She is furious on Jessica's behalf at the situation.",
+          "patient_language": "Tanya: 'We're going to get you help. You're not alone in this.' Jessica: (crying) 'I have to tell my sister. I have to figure this out with Maya.'",
+          "emotional_register": "Jessica: relieved, terrified, sad. Tanya: protective, angry at the virus more than at Jessica."
+        }
+      ],
+      "outcome_trajectory": {
+        "correct_treatment": "Immediate confirmation with HIV RNA PCR (already done), CD4 count, resistance testing. Start antiretroviral therapy immediately (integrase inhibitor-based regimen most appropriate for acute infection). Infectious disease consult. Case management for support and disclosure planning. Partner notification and testing. Tanya gets tested. Counseling and support groups. Plans for Maya's care and telling father appropriately.",
+        "correct_outcome": "Jessica is connected to ID care and starts treatment within 24 hours. CD4 count is measured at 580 (relatively preserved because this is acute infection). Viral load suppresses to undetectable on therapy. She remains healthy. She discloses to her sister, who is initially shocked but ultimately supportive. She tells Maya's father in controlled way with support from her social worker. She does not lose custody. She becomes undetectable=untransmittable and lives a long healthy life. This changes her trajectory but does not destroy it.",
+        "missed_diagnosis": "If attending relies on negative standard antibody test and discharges with 'probable flu' and Tamiflu: Jessica continues spreading virus through unknowing sexual contact. Her viral load remains extremely high (180k copies). She likely has another sexual encounter within the next week or two because she thinks she has the flu and will recover. She progresses to symptomatic AIDS in 6-12 months if untreated. She returns to ED much sicker.",
+        "resident_catches_it_unsupervised": "A resident thinks 'fever, rash, lymphadenopathy, mild transaminitis' and puts acute viral syndrome into the differential. Orders fourth-generation HIV test as part of workup for fever of unknown origin. Test is positive. Resident does not panic, does not shame the patient, immediately calls ID and infectious disease comes down to help with first-line treatment. Patient is treated appropriately immediately.",
+        "resident_misses_it_unsupervised": "A resident anchors on 'flu season' and 'negative HIV antibody test means not HIV.' Patient discharged with Tamiflu and 'rest, fluids, fever management.' No ID involvement. Jessica takes Tamiflu (which is ineffective for HIV), continues to feel terrible in a different way after 48 hours, but assumes it is because the flu is 'worse than usual.' She returns in 4 weeks septic with opportunistic infection.",
+        "disposition": "admit-floor",
+        "follow_up_hook": "Jessica's disclosure to her family and partner will be a major ongoing social and emotional process. Her connection to ID care and public health will be long-term. There is potential for her to become a mentor to other newly diagnosed patients at Riverside General. Her case will also highlight the need for careful fourth-generation testing in the ED."
+      },
+      "systemic_flags": {
+        "world_event_connection": "Jessica's vulnerability to this infection stems partly from the economic stress of Riverside\u2014she is overworked, underpaid, dealing with housing instability and a single-parent household, which made her emotionally vulnerable during the encounter. This is the same ecosystem that produced Marcus Chen and Patricia DeMarco.",
+        "shift_case_connection": null,
+        "return_patient": false,
+        "prior_visit_summary": null,
+        "future_seed": "Jessica's regular ID appointments at Riverside General will make her a known patient. If she successfully suppresses her viral load and becomes undetectable, she may become a peer educator for the hospital's community education program in a year or two. She may also be a resource if other young single mothers come in with similar presentations."
+      }
+    },
+    {
+      "case_id": "SHIFT_20260317_0118_11",
+      "narrative_hook": "A 6-year-old was brought in by his mother because he tripped on the stairs at home this afternoon and hit his head. He seems fine\u2014he's alert, talking, not complaining much. The mother is reasonably calm. He did not lose consciousness. No vomiting. Just a small bump on his forehead.",
+      "presenting_layer": {
+        "chief_complaint": "Head trauma from fall, minor mechanism",
+        "age": 6,
+        "sex": "M",
+        "vitals": {
+          "hr": 88,
+          "bp_systolic": 104,
+          "bp_diastolic": 62,
+          "rr": 20,
+          "temp_f": 98.4,
+          "o2_sat": 99,
+          "gcs": 15
+        },
+        "triage_note": "6-year-old male with head injury from fall at home. Alert, playful, GCS 15. Small laceration over right forehead. Mother reports no LOC, no vomiting, normal behavior since incident. Vital signs reassuring.",
+        "acuity": 4,
+        "arrival_method": "family drop-off",
+        "time_in_waiting_room_minutes": 30
+      },
+      "medical_truth": {
+        "true_diagnosis": "Minor head injury with small scalp laceration. Concussion risk but low probability of intracranial injury given mechanism and clinical presentation. No acute neurosurgical intervention needed.",
+        "supporting_findings": [
+          "Age 6, mechanism is low-velocity fall from stairs (approximately 4-5 feet)",
+          "Alert and playful in ED, GCS 15",
+          "Small laceration over right forehead, approximately 1 cm, no active bleeding",
+          "No focal neurologic deficits on brief exam",
+          "No vomiting or severe headache",
+          "Mother reports normal mental status since injury",
+          "Normal vital signs for age"
+        ],
+        "what_labs_show": "No labs needed for this patient. Routine labs would be normal.",
+        "what_imaging_shows": "Head CT (if ordered) would be normal. No intracranial hemorrhage, no skull fracture, no edema. CT is not indicated by Ottawa Head Injury Rules for pediatric patients.",
+        "time_sensitivity": false,
+        "time_window_minutes": null,
+        "red_herrings": [],
+        "classic_miss_reason": "The classic miss with minor pediatric head injuries is overtesting\u2014ordering CT scans and labs when they are not indicated, causing unnecessary radiation exposure and cost, and creating a sick role for a healthy child. This is actually a case where the miss is in doing too much, not too little. Good practice is reassurance, wound care, clear return precautions, and discharge."
+      },
+      "patient_profile": {
+        "first_name": "David",
+        "last_name": "Okonkwo",
+        "occupation": "Student, first grade",
+        "living_situation": "Lives with mother (healthcare worker at a different hospital), father, and 3-year-old sister in a house in Riverside neighborhood",
+        "why_they_came_today": "His mother saw him fall and immediately wanted to rule out anything serious. She works in healthcare (nursing) and knows that head injuries require evaluation. She is being appropriately cautious.",
+        "what_theyre_not_saying": "Nothing medically significant. She is not hiding anything. She is being a good parent.",
+        "what_they_fear": "That he has a serious head injury that is not obvious. That she will miss something. That he will have permanent brain damage. These are normal parental fears.",
+        "what_they_are_protecting": "Her peace of mind. The sense that her children are safe.",
+        "communication_style": "Clear, coherent, detailed history. Answers questions directly. Asks appropriate questions. Observant about her son's behavior. Not anxious in a pathologic way\u2014appropriately concerned.",
+        "attitude_toward_medical_system": "Trusting and respectful. Understands medical procedures. Does not demand unnecessary testing but does want reassurance.",
+        "key_person": "His mother, Sarah. Present and engaged.",
+        "key_person_relationship": "Normal, healthy parent-child relationship. She is his advocate and protector."
+      },
+      "reveal_sequence": [
+        {
+          "trigger": "physical_exam",
+          "trigger_detail": "Provider performs careful neurologic exam including cranial nerves, motor function, cerebellar testing",
+          "information": "All normal. No focal deficits. Child is playful and cooperative during exam.",
+          "patient_language": "David: 'Can I go home now?' Mother: 'They just want to make sure you're okay, buddy.'",
+          "emotional_register": "David: impatient, not distressed. Mother: relieved as exam progresses."
+        },
+        {
+          "trigger": "direct_question",
+          "trigger_detail": "Provider asks David about the fall and what happened right after",
+          "information": "David accurately describes tripping on stairs and hitting his head on the edge of a step. Immediately got up and cried. Mother was there within seconds.",
+          "patient_language": "David: 'I was running down the stairs and my foot got caught. I hit my head really hard and it hurt. Mom came and hugged me.'",
+          "emotional_register": "Matter-of-fact. He is genuinely okay emotionally."
+        }
+      ],
+      "outcome_trajectory": {
+        "correct_treatment": "Wound closure (small laceration can be closed with tissue adhesive or small sutures), wound care instructions. Clear discharge instructions regarding return precautions: return if develops severe headache, repeated vomiting, altered consciousness, difficulty speaking, weakness, or behavioral change. Reassurance to mother. No imaging needed. No labs needed.",
+        "correct_outcome": "David is discharged home with his mother. Laceration heals without complication. He experiences minor post-concussive symptoms (slight headache, mild attention in school for 2-3 days). Mother monitors him closely per instructions. No return visit needed. Child recovers fully.",
+        "missed_diagnosis": "There is no diagnosis to miss. This is a normal, appropriate case of minor head injury that does not require intervention. The risk is iatrogenic harm from overtesting.",
+        "resident_catches_it_unsupervised": "A resident sees 'child, head injury' and briefly thinks 'CT scan,' but then applies Ottawa Head Injury Rules, which are validated for exactly this age and mechanism. No criteria are met. Resident performs good neuro exam, documents findings, discusses with attending or senior resident, confirms no imaging needed. Appropriate discharge.",
+        "resident_misses_it_unsupervised": "A resident, uncertain about whether to image, orders a CT 'just to be safe.' CT is normal (as expected). Child is unnecessarily exposed to radiation. Family receives a $4,000 bill for an unnecessary test. Parents become anxious because 'they wouldn't have ordered it if they weren't worried.' This is bad practice and common in pediatric head injury.",
+        "disposition": "discharge",
+        "follow_up_hook": "None. This is a straightforward case with a good outcome. It serves as a contrast to the more complex cases on the shift. The value of this case is in teaching appropriate use of imaging and resistance to defensive medicine."
+      },
+      "systemic_flags": {
+        "world_event_connection": null,
+        "shift_case_connection": null,
+        "return_patient": false,
+        "prior_visit_summary": null,
+        "future_seed": null
+      }
+    },
+    {
+      "case_id": "SHIFT_20260317_0118_12",
+      "narrative_hook": "A woman whose sister drove in from out of state with a cough that won't stop, and the sister keeps checking her phone like she's waiting for someone to call and tell her she made a mistake coming here.",
+      "presenting_layer": {
+        "chief_complaint": "Cough for 10 days, fever, shortness of breath",
+        "age": 52,
+        "sex": "F",
+        "vitals": {
+          "hr": 108,
+          "bp_systolic": 138,
+          "bp_diastolic": 82,
+          "rr": 22,
+          "temp_f": 101.8,
+          "o2_sat": 92,
+          "gcs": null
+        },
+        "triage_note": "Productive cough, fever 101.8, O2 sat 92 on room air. Reports started Sunday evening. Sister at bedside. Lives in [another state].",
+        "acuity": 2,
+        "arrival_method": "walk-in",
+        "time_in_waiting_room_minutes": 18
+      },
+      "medical_truth": {
+        "true_diagnosis": "Community-acquired pneumonia (CAP) with early sepsis, likely bacterial superimposed on influenza-like illness",
+        "supporting_findings": [
+          "Fever 101.8 with productive cough and progressive dyspnea",
+          "Hypoxia 92% on room air",
+          "Tachycardia 108",
+          "Tachypnea 22",
+          "Elevated BP likely compensatory",
+          "Reports myalgias and malaise for first 3-4 days, then localized to chest",
+          "Denies significant past medical history but admits she 'never goes to doctors'",
+          "Cough productive of green sputum for past 3 days"
+        ],
+        "what_labs_show": "CBC shows WBC 14.2 with left shift. CMP normal. Lactate 2.1 (lower end of elevated). Blood cultures pending. Procalcitonin 0.8 (consistent with bacterial infection).",
+        "what_imaging_shows": "Chest X-ray shows right lower lobe infiltrate, no effusion, no pneumothorax.",
+        "time_sensitivity": true,
+        "time_window_minutes": 240,
+        "red_herrings": [
+          "Sister keeps mentioning 'everyone at work is sick' \u2014 encourages assumption of simple viral URI that will self-resolve",
+          "Patient is relatively upright and speaking in sentences \u2014 can minimize severity of hypoxia",
+          "Early in sepsis course \u2014 no hypotension yet, no altered mental status",
+          "Works in a school setting \u2014 suggests viral etiology to both patient and residents"
+        ],
+        "classic_miss_reason": "The patient herself is downplaying this. She came in because her sister insisted ('You sound terrible on the phone, I'm driving over'), not because she thought it was serious. The sister is also somewhat dismissive \u2014 'everyone has this thing going around.' A resident can get pulled into that narrative, especially on a busy evening shift. The O2 sat of 92 is easy to rationalize as 'not that bad,' and the patient will agree. The presentation reads as 'bronchitis, probably viral' unless the clinician actively treats the hypoxia and fever together as an urgent problem. The early sepsis findings are subtle. A history-and-antibiotics-go-home approach would be the classic miss."
+      },
+      "patient_profile": {
+        "first_name": "Margaret",
+        "last_name": "Chen",
+        "occupation": "Elementary school teacher",
+        "living_situation": "Lives alone in [another state], three hours from sister",
+        "why_they_came_today": "Her sister called Tuesday night and heard her coughing through the phone. Insisted on driving over Wednesday afternoon and brought her directly to the ED Thursday evening because Margaret's fever spiked to 102 and she woke up short of breath.",
+        "what_theyre_not_saying": "Margaret has avoided the medical system deliberately for ten years \u2014 not antivaccine, just hasn't prioritized it and doesn't trust it much. She's been managing her life fine without it. She's also embarrassed that her sister had to drive three hours to take care of her. There's a guilt operating underneath her downplaying of symptoms.",
+        "what_they_fear": "That this will spiral into something that requires her to miss work (school year is in session and she has no substitute plans). That she'll have to admit to her principal that she should have stayed home longer. That her sister will tell their mother, which will trigger a whole family narrative about how Margaret 'doesn't take care of herself.'",
+        "what_they_are_protecting": "Her independence and her competence. She is a person who handles things. Getting seriously ill is admitting she is not handling something, and that matters to her more than being honest about how bad she feels.",
+        "communication_style": "Answers questions directly but trails off at the end, as if deciding mid-sentence whether to finish the thought. Makes eye contact but keeps checking her sister's face, as if looking for permission to be taking this seriously. Laughs slightly when mentioning her symptoms, a habit that undercuts their gravity.",
+        "attitude_toward_medical_system": "Skeptical and mildly defensive. No major trauma history, just a general sense that she doesn't fit into medical spaces and that doctors overtreat things. Came in reluctantly and would prefer to leave soon.",
+        "key_person": "Her sister Rachel, who drove three hours to get her and is now sitting in the room looking simultaneously worried and like she's already doing mental math about how long she can stay before she needs to drive back.",
+        "key_person_relationship": "Close enough that Rachel noticed something was wrong over the phone. Not close enough that Margaret trusts Rachel won't tell their mother everything. This drives a lot of Margaret's behavior."
+      },
+      "reveal_sequence": [
+        {
+          "trigger": "direct_question",
+          "trigger_detail": "When asked how long she's had the green sputum production, Margaret hesitates",
+          "information": "It's been three days, not 'just a little bit.' She's been coughing up mucus most of the day when she wakes up.",
+          "patient_language": "Yeah, like... since Tuesday morning I guess. Every morning it's there. I thought it would clear up but it didn't.",
+          "emotional_register": "Slightly ashamed, as if admitting the symptom is worse than experiencing it"
+        },
+        {
+          "trigger": "physical_exam",
+          "trigger_detail": "When the attending auscultates the right lower lobe and finds crackles and decreased air movement",
+          "information": "This is infiltrate, not bronchitis. The exam finding makes the CXR finding suddenly matter.",
+          "patient_language": "Margaret doesn't say anything, but her sister leans forward slightly.",
+          "emotional_register": "The clinical finding shifts the room's emotional temperature. Reality check."
+        },
+        {
+          "trigger": "test_result",
+          "trigger_detail": "When the attending returns with the CXR images and shows her the right lower lobe infiltrate",
+          "information": "Margaret sees it and something in her face changes. The sister says 'see, that's why I drove over.' Margaret's eyes get wet slightly.",
+          "patient_language": "Oh. I didn't... I thought it was just a cold. I thought it would go away.",
+          "emotional_register": "A moment of fear passing across her face, followed by relief that someone else is now responsible for this"
+        },
+        {
+          "trigger": "trust_established",
+          "trigger_detail": "After admission decision is made and the attending explains the need for antibiotics and likely 2-3 day admission",
+          "information": "Margaret mentions she hasn't had a physical exam in nine years. Her sister touches her arm. Margaret is now actually listening instead of waiting to leave.",
+          "patient_language": "I know I should probably... I've just been busy. And I don't really have a regular doctor.",
+          "emotional_register": "Vulnerable. The defenses are down slightly now that someone else has taken the problem seriously."
+        }
+      ],
+      "outcome_trajectory": {
+        "correct_treatment": "Admit for IV antibiotics (ceftriaxone + azithromycin pending cultures, but empiric coverage started immediately). Supplemental oxygen to maintain O2 sat >94%. IV fluids. Close monitoring for sepsis progression. Repeat vitals in 2 hours.",
+        "correct_outcome": "Responds well to antibiotics. By hospital day 2, fever down, O2 sat improves to 95% on room air, productive cough begins to resolve. Discharged on day 3 with oral antibiotics and close outpatient follow-up. Sister stays overnight, takes her home, helps her arrange for substitute coverage at school. Uses the hospitalization as a pivot point to establish primary care.",
+        "missed_diagnosis": "If the clinician treats this as viral URI and sends her home with supportive care and 'call if it gets worse' \u2014 patient gets worse at home over the next 36 hours, develops hypotension and altered mental status, comes back in ambulance with full sepsis. Much harder recovery, longer ICU stay, potential for multi-organ failure.",
+        "resident_catches_it_unsupervised": "Resident notes the combination of fever + hypoxia + infiltrate on CXR, initiates antibiotics promptly, calls for admission. Attending approves. Clean pathway.",
+        "resident_misses_it_unsupervised": "Resident frames this as 'viral respiratory illness, patient is stable enough to go home with follow-up.' Doesn't weight the hypoxia heavily because patient is not in distress. Doesn't connect fever + infiltrate urgently. Patient discharged.",
+        "disposition": "admit-floor",
+        "follow_up_hook": "Margaret establishes primary care with a physician at Riverside General's outpatient clinic. This becomes her anchor to the healthcare system. A resident who admits her well might see her again in six weeks for a check-up."
+      },
+      "systemic_flags": {
+        "world_event_connection": "Early flu season + respiratory illness uptick in the community. Margaret works in a school (one of the major transmission points in a community). Her case is part of a broader wave starting to hit Riverside, but it's still early enough that not every clinician will recognize it as urgent.",
+        "shift_case_connection": null,
+        "return_patient": false,
+        "prior_visit_summary": null,
+        "future_seed": "If this patient is admitted and treated well, she becomes an anchor case for the week. If she's missed and comes back in septic shock, she becomes a teaching case about cognitive bias and downplaying patient presentation."
+      }
+    },
+    {
+      "case_id": "SHIFT_20260317_0118_13",
+      "narrative_hook": "A man who came in because he tripped on the sidewalk outside the building, and he's annoyed about the inconvenience, and his friend who drove him is acting like this is a bigger deal than it actually is.",
+      "presenting_layer": {
+        "chief_complaint": "Fall, left ankle swelling, mild head pain",
+        "age": 61,
+        "sex": "M",
+        "vitals": {
+          "hr": 72,
+          "bp_systolic": 142,
+          "bp_diastolic": 88,
+          "rr": 16,
+          "temp_f": 98.6,
+          "o2_sat": 98,
+          "gcs": 15
+        },
+        "triage_note": "Slipped on wet concrete outside ED entrance approximately 20 minutes ago. Denies loss of consciousness. Left ankle swollen, able to bear weight. Small laceration on forehead, no active bleeding. Alert and oriented. Friend accompanying.",
+        "acuity": 4,
+        "arrival_method": "walk-in",
+        "time_in_waiting_room_minutes": 5
+      },
+      "medical_truth": {
+        "true_diagnosis": "Uncomplicated ankle sprain (Grade I), simple laceration to forehead. However, BP 142/88 is elevated for this patient's baseline \u2014 indicates he likely has undiagnosed hypertension.",
+        "supporting_findings": [
+          "Ankle swelling localized to lateral malleolus region",
+          "Can bear weight, though with discomfort",
+          "ROM limited in inversion/eversion but intact",
+          "Laceration is superficial, 0.5 cm, not gaping",
+          "No neuro deficits",
+          "GCS 15, alert and oriented",
+          "Vitals otherwise stable"
+        ],
+        "what_labs_show": "No labs indicated for this presentation.",
+        "what_imaging_shows": "Ankle X-rays (if obtained) would likely show no fracture. The clinical presentation does not warrant imaging in the first instance.",
+        "time_sensitivity": false,
+        "time_window_minutes": null,
+        "red_herrings": [
+          "The elevated BP in the setting of acute pain from a fall \u2014 easy to attribute to pain response rather than recognizing it as baseline hypertension",
+          "The 'convenient' presentation of a fall as the only reason for the visit \u2014 encourages anchoring on the ankle/laceration and missing the BP entirely",
+          "The patient himself is irritated about being here and dismissive of his symptoms \u2014 signals 'routine case' to the clinician"
+        ],
+        "classic_miss_reason": "The clinician focuses on the injury (ankle + laceration) because that's the presenting complaint and it's straightforward. The BP is noted, filed, and not explored. In a routine evening shift with throughput pressure, there's no trigger to ask about hypertension history, symptoms of cardiovascular disease, or baseline BP. The patient is not in crisis. His vitals are 'normal' for someone who just had a painful injury. A quick discharge with ankle care instructions and suture closure happens without the missed opportunity to identify uncontrolled hypertension that this patient likely doesn't know he has."
+      },
+      "patient_profile": {
+        "first_name": "David",
+        "last_name": "Kowalski",
+        "occupation": "Warehouse supervisor",
+        "living_situation": "Lives alone in a studio apartment; divorced, no kids, relatively isolated socially",
+        "why_they_came_today": "He tripped on wet concrete in front of the ED because his friend Marcus insisted on driving him here after the fall. David wanted to go home and ice his ankle. Marcus worked in healthcare briefly years ago and gets cautious about head injuries.",
+        "what_theyre_not_saying": "David hasn't been to a doctor in over fifteen years. Not because he's avoidant exactly, but because he's been healthy enough and work has been consuming and he just never made it happen. He has no idea his blood pressure is this high. He would be shocked to know he has hypertension.",
+        "what_they_fear": "Being told he needs to take medication, go to follow-up appointments, change his life somehow. He's fifty-eight, still working full-time at a demanding job, and adding medical complexity to that feels like a burden he can't take on right now.",
+        "what_they_are_protecting": "His sense of self as a person who is fine. Who doesn't need help. Who can handle what he's got. His independence is tied up in not being the kind of person who has medical problems.",
+        "communication_style": "Speaks in short sentences with a slightly dismissive tone. When asked questions about his health history, he gives minimal answers. 'Never had any problems.' 'Don't take any medications.' 'Feel fine most of the time.' His answers are complete sentences but feel like they're closing conversations rather than opening them. He looks at the clock twice.",
+        "attitude_toward_medical_system": "Mild contempt mixed with indifference. Believes that if something were really wrong, he would feel worse. Sees healthcare as something for people who are actually sick, not for minor injuries.",
+        "key_person": "Marcus, his friend and coworker of eighteen years, who is genuinely worried about him, has noticed he seems more winded lately, and drove him here despite David's protests. Marcus is sitting in the waiting room and texted him 'get them to check you out properly' while David was walking in.",
+        "key_person_relationship": "Marcus is his closest friend and probably his lifeline to social connection. David doesn't fully realize how much he depends on Marcus's judgment. But he also resists it sometimes because accepting Marcus's concern means accepting that something might actually be wrong."
+      },
+      "reveal_sequence": [
+        {
+          "trigger": "direct_question",
+          "trigger_detail": "When the attending asks about past medical history and David says 'never had any problems,' the attending follows up: 'When's the last time you had your blood pressure checked?'",
+          "information": "David pauses. He doesn't actually know. It's been at least fifteen years. Probably longer.",
+          "patient_language": "I don't know. High school? Maybe college? I've never had any issues with it or anything.",
+          "emotional_register": "Slightly defensive, but also a moment of genuine uncertainty about his own body"
+        },
+        {
+          "trigger": "physical_exam",
+          "trigger_detail": "The attending retakes BP manually after the initial reading, and gets 144/86. The attending notes it and says it's elevated.",
+          "information": "David learns for the first time that he has high blood pressure. This is not dramatic, but it is new information that he didn't have before.",
+          "patient_language": "Well... I mean, I just fell. I'm probably just tense. Is that bad?",
+          "emotional_register": "A small moment of worry passes over his face, followed by rationalization"
+        },
+        {
+          "trigger": "trust_established",
+          "trigger_detail": "After the ankle is cleared and the laceration is closed, the attending sits down and explains that elevated BP is common, treatable, but needs follow-up and monitoring.",
+          "information": "David hears that this is real and will require him to do something about it. He also hears that it's not immediately dangerous but shouldn't be ignored.",
+          "patient_language": "So like... what do I do? Do I need medication? Because I'm not really... I don't really want to take medication if I don't have to.",
+          "emotional_register": "Worry mixed with resistance. He's hearing the message but also trying to negotiate out of it."
+        },
+        {
+          "trigger": "family_present",
+          "trigger_detail": "The attending suggests David schedule a follow-up appointment with a primary care provider, and mentions that Marcus is in the waiting room. David brings Marcus back in, and the attending repeats the BP concern to both of them.",
+          "information": "Marcus hears about the BP and nods like 'I knew something was going on.' David sees his friend's concern validated by the doctor. A small shift happens in David's resistance.",
+          "patient_language": "Marcus: 'I told you you were getting winded.' David: 'I'm fine. It's just... a lot of stairs.' Marcus to the doctor: 'He refuses to slow down.' Doctor: 'He needs to get this checked.'",
+          "emotional_register": "David feels a mix of irritation at being called out and relief that someone else sees it and cares"
+        }
+      ],
+      "outcome_trajectory": {
+        "correct_treatment": "Ankle: RICE protocol, ankle wrap/brace, pain management as needed. Laceration: cleaned, closed with steri-strips or sutures. Blood pressure: documented, discussed. Patient given referral to primary care physician at Riverside General's outpatient clinic. Advised to follow up within 1-2 weeks for BP recheck and establishment of care. Educated on hypertension risk factors.",
+        "correct_outcome": "David follows up with primary care (Marcus helps him make the appointment and reminds him to go). Primary care documents hypertension, starts treatment, initiates lifestyle modifications. David is now anchored into the healthcare system. His cardiovascular risk is identified and managed before it becomes a crisis.",
+        "missed_diagnosis": "If the elevated BP is noted but not explored or followed up on, David goes home thinking his ankle is the only thing that matters. He doesn't establish primary care. His hypertension remains undiagnosed and unmanaged. In two years, he has a stroke or MI that he could have prevented.",
+        "resident_catches_it_unsupervised": "Resident notes the BP, recognizes it as elevated for an acute pain setting but also elevated in general, asks a few more questions, and makes sure David has a primary care referral and discharge instructions that emphasize getting BP monitored soon. Clean catch.",
+        "resident_misses_it_unsupervised": "Resident treats the ankle, closes the laceration, documents 'BP elevated in setting of acute pain \u2014 likely pain response' and discharges with ankle care. No hypertension workup. No referral. Patient goes home.",
+        "disposition": "discharge",
+        "follow_up_hook": "If the resident does this well, David is now a patient in the Riverside system with a newly diagnosed chronic condition that will require ongoing management. He might come back in for his primary care follow-up in a few weeks. If this went well in the ED, it was because someone took two extra minutes to ask the right questions and make the right referral."
+      },
+      "systemic_flags": {
+        "world_event_connection": null,
+        "shift_case_connection": "Both this case and the Margaret Chen case feature uninsured/underinsured patients with gaps in primary care access using the ED as their entry point into the healthcare system. David's case is the preventive miss; Margaret's case is the acute miss. Together they illustrate how Riverside General functions as the community's de facto primary care provider.",
+        "return_patient": false,
+        "prior_visit_summary": null,
+        "future_seed": "If David is managed well in this ED visit, he becomes a 'success story' of the healthcare system working as intended \u2014 catching someone before they break. If he's missed, he becomes a patient who comes back in a crisis state in six months or a year."
+      }
+    }
+  ]
+}
