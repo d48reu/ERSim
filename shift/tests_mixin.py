@@ -345,15 +345,21 @@ class ShiftTestsMixin:
         delay_min = delay * SHIFT_MINUTES_PER_TURN
         return f"[{test_name}] ordered — results due ~{due_clock} (~{delay_min} min)"
 
-    def bundle_test(self, test_names: list[str]) -> str:
-        """Order multiple tests as ONE turn, then defer all results."""
+    def bundle_test(self, test_names: list[str], suppress_tick: bool = False) -> str:
+        """Order multiple tests as ONE turn, then defer all results.
+
+        suppress_tick=True when called from a flow that already ticked for
+        this attending action (e.g. approve_plan -> _execute_plan); prevents
+        double-charging the player on one click.
+        """
         bay = self._require_active_bay()
         if not bay:
             return "You're not in a bay."
 
-        # Tick once for the whole bundle — it's one attending action
-        self._tick_others(self.active_bay_id)
-        self.global_turn += 1
+        if not suppress_tick:
+            # Tick once for the whole bundle — it's one attending action
+            self._tick_others(self.active_bay_id)
+            self.global_turn += 1
         bay.note_attending_intervention(
             f"ordered test bundle: {', '.join(test_names[:4])}"
         )
@@ -370,24 +376,6 @@ class ShiftTestsMixin:
                 continue
             _, message = self._queue_test_result(bay, name, actor="attending")
             output.append(f"  {message}")
-            continue
-            delay = self._get_test_delay(name)
-            if delay >= 999:
-                bay.record("attending", "test", name)
-                output.append(f"  [{name}] — not available this shift, flag for follow-up")
-                continue
-            if delay == 998:
-                bay.record("attending", "test", name)
-                output.append(f"  [{name}] drawn and sent — results post-shift with admitting team")
-                continue
-            full_result = bay.patient_session.order_test(name)
-            bay.record("attending", "test", name)
-            bay.record("system", "test_pending", f"{name} — due turn {self.global_turn + delay}")
-            due_turn = self.global_turn + delay
-            due_clock = self._format_clock(due_turn)
-            bay.pending_results.append((due_turn, name, full_result, bay.bay_id))
-            delay_min = delay * SHIFT_MINUTES_PER_TURN
-            output.append(f"  [{name}] ordered — due ~{due_clock} (~{delay_min} min)")
 
         if skipped:
             output.append(f"  [skipped — not recognized: {', '.join(skipped)}]")

@@ -301,3 +301,41 @@ def test_warning_still_fires_in_normal_path() -> None:
     # First 4 ticks: 3 ok + 1 warning (ticks 1,2,3 < 4; tick 4 == warning_threshold)
     signals = [bay.tick() for _ in range(4)]
     assert "warning" in signals, f"warning should still fire in normal path, got {signals}"
+
+
+# ---------------------------------------------------------------------------
+# #9 — approve_plan is one attending action, not two
+# ---------------------------------------------------------------------------
+
+def test_approve_plan_is_one_tick_not_two(three_cases) -> None:
+    """Regression: prior behavior ticked once in approve_plan AND once in
+    bundle_test, so Acuity-1 bays were force-visited first. Now a single
+    approve_plan produces a single tick on other bays.
+    """
+    shift = _build_shift_with_stub_sessions(three_cases)
+    # Seed a plan with tests on Bay 2 so _execute_plan goes through bundle_test
+    shift.bays["Bay 2"]._pending_plan = SimpleNamespace(
+        what_they_say="x",
+        plan_summary="y",
+        plan_tests=["cbc", "bmp"],
+        plan_questions=[],
+        differential=[],
+        flags=[],
+        confidence="",
+    )
+    # Stub resident_ai enough for approve_plan
+    shift.bays["Bay 2"].resident_ai = SimpleNamespace(
+        attending_backed=lambda _: None,
+        attending_overrode=lambda _: None,
+    )
+
+    # Enter Bay 2 — this flips Bay 1 and Bay 3 to SUPERVISED without ticking
+    shift.go("2")
+    ticks_before = {bid: b.timer_ticks for bid, b in shift.bays.items() if bid != "Bay 2"}
+
+    shift.approve_plan(1)
+
+    ticks_after = {bid: b.timer_ticks for bid, b in shift.bays.items() if bid != "Bay 2"}
+    for bid in ticks_before:
+        delta = ticks_after[bid] - ticks_before[bid]
+        assert delta == 1, f"{bid} should tick exactly once per approve_plan, got {delta}"

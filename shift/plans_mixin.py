@@ -86,6 +86,7 @@ class ShiftPlansMixin:
             # Full approval — run the plan as-is
             bay._pending_plan = None
             bay._plan_on_hold = False
+            bay.note_attending_intervention("approved resident plan")
             bay.record("attending", "approve_plan", "approved resident plan")
             bay.resident_ai.attending_backed("approved workup plan")
             return self._execute_plan(bay, plan)
@@ -100,6 +101,10 @@ class ShiftPlansMixin:
             extra = self._interpret_addendum(bay, plan, addendum)
             bay._pending_plan = None
             bay._plan_on_hold = False
+            bay.note_attending_intervention(
+                f"approved plan but added: {addendum}",
+                challenged=True,
+            )
             bay.record("attending", "approve_plan", f"approved + added: {addendum}")
             output = [f"[{res_name.upper()}]: Got it — adding {extra['summary']}. Running now."]
             # Merge extra tests into plan
@@ -118,6 +123,10 @@ class ShiftPlansMixin:
             redirect = self._interpret_redirect(bay, plan, addendum)
             bay._pending_plan = None
             bay._plan_on_hold = False
+            bay.note_attending_intervention(
+                f"redirected plan: {addendum}",
+                challenged=True,
+            )
             bay.record("attending", "approve_plan", f"redirected: {addendum}")
             bay.resident_ai.attending_overrode(f"redirected workup: {addendum}")
             output = [f"[{res_name.upper()}]: {redirect['reaction']}"]
@@ -130,6 +139,10 @@ class ShiftPlansMixin:
             # Hold — pause timer, resident waits
             bay._plan_on_hold = True
             bay._plan_prompt_turns = 0
+            bay.note_attending_intervention(
+                "held plan to pressure-test the story first",
+                challenged=True,
+            )
             bay.record("attending", "approve_plan", "held plan — talking to patient first")
             return f"[{res_name.upper()}]: No problem. I'll be right here."
 
@@ -138,13 +151,20 @@ class ShiftPlansMixin:
     def _execute_plan(self, bay, plan) -> str:
         """Run the plan's tests and questions. Returns combined output."""
         output = []
+        bay.absorb_resident_assessment(plan, mode="responsive")
         if plan.plan_tests:
-            result = self.bundle_test(plan.plan_tests)
+            # approve_plan already ticked for this attending action; the
+            # bundled orders share that tick so Acuity 1 bays are not
+            # double-charged on a single click.
+            result = self.bundle_test(plan.plan_tests, suppress_tick=True)
             output.append(result)
         if plan.plan_questions:
             res_name = bay.resident.name.split()[0]
             for q in plan.plan_questions[:2]:  # Max 2 questions per plan
+                before_summary = bay.patient_session.get_reveal_summary()
                 response = bay.patient_session.interact(q)
+                after_summary = bay.patient_session.get_reveal_summary()
+                bay.note_reveal_change(before_summary, after_summary)
                 patient_name = bay.patient_name.split()[0]
                 output.append(f"[{res_name.upper()} asks]: {q}")
                 output.append(f"[{patient_name.upper()}]: {response}")
@@ -231,6 +251,7 @@ class ShiftPlansMixin:
 
         if n == 1:
             # Go ahead — execute the resident's recommended plan_tests
+            bay.note_attending_intervention("approved updated resident plan")
             bay.record("attending", "pivot_approved", "approved updated plan")
             bay.resident_ai.attending_backed("approved pivot plan")
             tests = pivot.plan_tests if pivot.plan_tests else []
@@ -261,6 +282,10 @@ class ShiftPlansMixin:
 
         elif n == 2:
             # Redirect — prompt for direction
+            bay.note_attending_intervention(
+                "redirected updated resident plan",
+                challenged=True,
+            )
             bay.record("attending", "pivot_redirected", "redirected updated plan")
             bay.resident_ai.attending_overrode("redirected pivot plan")
             return (
