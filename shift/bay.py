@@ -29,7 +29,7 @@ from enum import Enum
 
 from cases.schema import GeneratedCase
 from cases.interaction import PatientSession
-from residents.schema import Resident
+from residents.schema import Resident, ResidentCaseMemory
 from residents.resident import ResidentAI
 
 
@@ -71,6 +71,7 @@ class Bay:
     # Initialized after construction
     patient_session: Optional[PatientSession] = None
     resident_ai: Optional[ResidentAI] = None
+    resident_case_memory: ResidentCaseMemory = field(default_factory=ResidentCaseMemory)
 
     status: BayStatus = BayStatus.WAITING
     timer_ticks: int = 0
@@ -107,10 +108,11 @@ class Bay:
         acuity = self.case.presenting_layer.acuity.value
         self.timer_threshold = ACUITY_TIMER_THRESHOLDS.get(acuity, 8)
 
-    def setup(self, model: str = "anthropic/claude-haiku-4-5"):
+    def setup(self, model: str | None = None):
         """Initialize the patient session and resident AI."""
         self.patient_session = PatientSession(self.case, model=model)
         self.resident_ai = ResidentAI(self.resident, model=model)
+        self.seed_case_memory()
 
     @property
     def warning_threshold(self) -> int:
@@ -125,13 +127,20 @@ class Bay:
           'warning' — warning threshold just crossed (75% of timer)
           'ok'      — nothing special
         Timer pauses when attending is present and plan is on hold.
+        Once the resident has already acted autonomously, neither fire
+        nor warning signals apply — they already acted.
         """
         if self.status == BayStatus.SUPERVISED:
             # Don't tick if attending is actively deciding (hold)
             if self._plan_on_hold:
                 return 'ok'
+            # Silence timers entirely once autonomous has already fired —
+            # the bay state was already reset when go() entered and a
+            # second "resident getting antsy" warning is noise.
+            if self.autonomous_fired:
+                return 'ok'
             self.timer_ticks += 1
-            if self.timer_ticks >= self.timer_threshold and not self.autonomous_fired:
+            if self.timer_ticks >= self.timer_threshold:
                 return 'fire'
             if self.timer_ticks >= self.warning_threshold and not self.warning_fired:
                 self.warning_fired = True
@@ -146,6 +155,84 @@ class Bay:
             content=content,
             internal=internal,
         ))
+
+    def seed_case_memory(self) -> None:
+        memory = self.resident_case_memory
+        memory.current_frame = self.case.presenting_layer.chief_complaint
+        memory.current_plan = "Initial assessment pending."
+        memory.current_confidence = "moderate"
+        memory.latest_clue = ""
+        memory.latest_objective_change = ""
+        memory.last_attending_intervention = ""
+        memory.was_challenged = False
+        memory.correction_stage = "unmoved"
+
+    def note_attending_intervention(self, summary: str, challenged: bool = False) -> None:
+        memory = self.resident_case_memory
+        memory.last_attending_intervention = summary
+        if challenged:
+            memory.was_challenged = True
+            if memory.correction_stage == "unmoved":
+                memory.correction_stage = "defensive"
+
+    def note_reveal_change(self, before_summary: dict, after_summary: dict) -> str:
+        before_revealed = before_summary.get("revealed", []) if before_summary else []
+        after_revealed = after_summary.get("revealed", []) if after_summary else []
+        if len(after_revealed) <= len(before_revealed):
+            return ""
+
+        latest = after_revealed[-1]
+        information = latest.get("information", "")
+        self.resident_case_memory.latest_clue = information
+        if self.resident_case_memory.was_challenged:
+            self.resident_case_memory.correction_stage = "reconsidering"
+        return information
+
+    def note_objective_change(self, summary_line: str) -> None:
+        self.resident_case_memory.latest_objective_change = summary_line
+        if self.resident_case_memory.was_challenged:
+            self.resident_case_memory.correction_stage = "reconsidering"
+
+    def absorb_resident_assessment(self, assessment, mode: str = "responsive") -> None:
+        memory = self.resident_case_memory
+
+        differential = getattr(assessment, "differential", []) or []
+        if differential:
+            memory.current_frame = " / ".join(differential[:2])
+        elif mode == "proactive":
+            said = getattr(assessment, "what_they_say", "") or ""
+            if said:
+                compact = " ".join(said.split())
+                memory.current_frame = compact[:160]
+
+        plan_summary = getattr(assessment, "plan_summary", "") or ""
+        if plan_summary:
+            memory.current_plan = plan_summary
+        else:
+            tests = getattr(assessment, "plan_tests", []) or getattr(
+                assessment,
+                "recommended_workup",
+                [],
+            ) or []
+            questions = getattr(assessment, "plan_questions", []) or []
+            plan_bits = []
+            if tests:
+                plan_bits.append(f"tests: {', '.join(tests[:3])}")
+            if questions:
+                plan_bits.append(f"questions: {'; '.join(questions[:2])}")
+            if plan_bits:
+                memory.current_plan = " | ".join(plan_bits)
+
+        confidence = getattr(assessment, "confidence", "") or ""
+        if confidence:
+            memory.current_confidence = confidence
+
+        if mode != "proactive" and memory.has_signal():
+            memory.correction_stage = "updated"
+
+    @property
+    def resident_tendency(self) -> str:
+        return self.resident.tendency_line
 
     @property
     def acuity(self) -> int:
