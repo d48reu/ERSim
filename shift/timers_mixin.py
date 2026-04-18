@@ -35,6 +35,7 @@ class ShiftTimersMixin:
                 bay._test_results[test_name] = full_result
                 bay.record("system", "test_result", f"{test_name}: {full_result}")
                 summary_line = self._summarize_result(test_name, full_result)
+                bay.note_objective_change(f"{test_name}: {summary_line}")
                 header = (
                     f"[{bay_id} — {bay.patient_name}]  "
                     f"{test_name.upper()}  {self._format_clock(self.global_turn)}"
@@ -65,9 +66,11 @@ class ShiftTimersMixin:
                 test_name=combined_name,
                 test_result=combined_result,
                 interaction_summary=interaction_summary,
+                case_memory=bay.resident_case_memory,
             )
             if pivot.triggered and pivot.what_they_say:
                 bay._pending_pivot = pivot
+                bay.absorb_resident_assessment(pivot, mode="responsive")
                 bay.record("resident", "pivot_interrupt", pivot.what_they_say,
                           internal=pivot.pivot_reason)
 
@@ -105,27 +108,22 @@ class ShiftTimersMixin:
         if choice == 1:
             # Go ahead
             bay._pending_pivot = None
+            bay.note_attending_intervention(
+                f"approved cross-bay pivot in {bay_id}"
+            )
             # Queue any tests the resident wants to run
             if pivot.plan_tests:
                 for test_name in pivot.plan_tests:
                     self._queue_test_result(bay, test_name, actor="attending")
-                    continue
-                    if not self._validate_test_name(test_name):
-                        continue
-                    delay = self._get_test_delay(test_name)
-                    if delay == 998:
-                        bay.record("attending", "test", test_name)
-                        continue
-                    if delay < 998:
-                        full_result = bay.patient_session.order_test(test_name)
-                        bay.record("attending", "test", test_name)
-                        due_turn = self.global_turn + delay
-                        bay.pending_results.append((due_turn, test_name, full_result, bay_id))
             bay.record("attending", "approve_pivot", f"Approved {res_name}'s updated plan")
             return f"[{bay_id}] Approved {res_name}'s plan update."
         elif choice == 2:
             # Redirect — need to go to the bay to actually redirect
             bay._pending_pivot = None
+            bay.note_attending_intervention(
+                f"redirected cross-bay pivot in {bay_id}",
+                challenged=True,
+            )
             bay.record("attending", "redirect_pivot", f"Redirected {res_name}")
             return (
                 f"[{bay_id}] Redirected {res_name}. "
@@ -203,6 +201,7 @@ class ShiftTimersMixin:
             case=bay.case,
             timer_duration_minutes=bay.timer_ticks * 3,
             case_state_at_timer=case_state,
+            case_memory=bay.resident_case_memory,
         )
 
         # If we had a plan, execute the tests silently in the background
@@ -211,14 +210,6 @@ class ShiftTimersMixin:
             self.active_bay_id = bay_id  # Temporarily set active for test execution
             for test_name in planned_tests:
                 self._queue_test_result(bay, test_name, actor="resident")
-                continue
-                if self._validate_test_name(test_name):
-                    delay = self._get_test_delay(test_name)
-                    if delay < 999:
-                        full_result = bay.patient_session.order_test(test_name)
-                        bay.record("resident", "autonomous_test", test_name)
-                        due_turn = self.global_turn + delay
-                        bay.pending_results.append((due_turn, test_name, full_result, bay_id))
             self.active_bay_id = prev_active
 
         bay.record(

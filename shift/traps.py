@@ -244,3 +244,37 @@ def detect_and_assign_traps(bays: dict[str, Bay]) -> None:
         bay = bays[best_bay_id]
         bay.is_trap = True
         bay.trap_detail = best_detail
+        return
+
+    # Final fallback: no rule match anywhere. Flag the highest-acuity bay
+    # and describe the trap using the resident's own authored blind_spots.
+    # Rationale: the flagship mechanic must fire every shift, even when the
+    # trap library doesn't match the generated cases. Highest-acuity bay is
+    # picked because that is where an unchallenged resident frame does the
+    # most damage.
+    priority = sorted(
+        bays.items(),
+        key=lambda kv: (kv[1].case.presenting_layer.acuity.value, kv[0]),
+    )
+    for bay_id, bay in priority:
+        blind_spots = bay.resident.competency.blind_spots
+        if not blind_spots:
+            continue
+        primary_spot = blind_spots[0]
+        miss_excerpt = bay.case.medical_truth.classic_miss_reason[:110].rstrip()
+        bay.is_trap = True
+        bay.trap_detail = (
+            f"{bay.resident.name}'s blind spot ({primary_spot}) "
+            f"is an attention trap on this case — "
+            f"a frame that will not announce itself: {miss_excerpt}"
+        )
+        return
+
+    # Absolute last resort: no resident has any authored blind_spots.
+    # This should not happen with the built-in roster, but stay safe.
+    first_bay_id, first_bay = next(iter(bays.items()))
+    first_bay.is_trap = True
+    first_bay.trap_detail = (
+        f"Attention trap on {first_bay_id}: no obvious miss, but the "
+        f"resident's read deserves pressure-testing before disposition."
+    )

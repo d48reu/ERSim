@@ -2,10 +2,30 @@
 
 from __future__ import annotations
 
+import re
+
 from .bay import Bay
 
 
 class ShiftDebriefMixin:
+    @staticmethod
+    def _debrief_excerpt(text: str, max_chars: int = 140) -> str:
+        compact = re.sub(r"\s+", " ", (text or "")).strip()
+        if len(compact) <= max_chars:
+            return compact
+
+        sentence_endings = [". ", "! ", "? "]
+        best_cut = 0
+        for ending in sentence_endings:
+            idx = compact.rfind(ending, 0, max_chars)
+            if idx > best_cut:
+                best_cut = idx + 1
+        if best_cut:
+            return compact[:best_cut].strip()
+
+        truncated = compact[:max_chars].rsplit(" ", 1)[0].strip()
+        return f"{truncated or compact[:max_chars].strip()}..."
+
     def _clinical_depth_score(self, bay: Bay) -> float:
         """Estimate whether the attending built enough signal before closing."""
         if not bay.patient_session:
@@ -168,9 +188,13 @@ class ShiftDebriefMixin:
                 norm_correct = _norm(correct_dispo)
                 dispo_correct = norm_player == norm_correct
                 dispo_mismatch = None if dispo_correct else self._dispo_mismatch_type(norm_player, norm_correct)
+                thin_chart = getattr(bay, "low_evidence_disposition", False)
                 if dispo_correct:
-                    correct_dispositions += 1
-                    mark = "OK"
+                    # Thin-chart correct dispo: right call, but unsupported by
+                    # returned results / reveals / family. Half credit — a
+                    # coin-flip that landed, not a judgment that was earned.
+                    correct_dispositions += 0.5 if thin_chart else 1
+                    mark = "~" if thin_chart else "OK"
                 elif dispo_mismatch == "wrong_level":
                     # Partial credit for right direction, wrong level
                     correct_dispositions += 0.5
@@ -242,7 +266,7 @@ class ShiftDebriefMixin:
                         lines.append(f"    How: {trap_reasons[0]}")
                     lines.append(
                         f"    ** TRAP CASE — You caught it. "
-                        f"{res_name}'s blind spot: {bay.trap_detail[:80]}"
+                        f"{res_name}'s blind spot: {self._debrief_excerpt(bay.trap_detail, max_chars=110)}"
                     )
                 elif catch_quality == "partial":
                     showcase_lowlights.append(
@@ -250,7 +274,7 @@ class ShiftDebriefMixin:
                     )
                     lines.append(
                         f"    ** TRAP CASE - Recovered correctly, but with limited explicit challenge. "
-                        f"Blind spot: {bay.trap_detail[:80]}"
+                        f"Blind spot: {self._debrief_excerpt(bay.trap_detail, max_chars=110)}"
                     )
                     traps_partial += 1
                     if trap_reasons:
@@ -262,7 +286,7 @@ class ShiftDebriefMixin:
                     lines.append(
                         f"    ** TRAP CASE — Missed. "
                         f"{res_name} led you wrong. "
-                        f"Blind spot: {bay.trap_detail[:80]}"
+                        f"Blind spot: {self._debrief_excerpt(bay.trap_detail, max_chars=110)}"
                     )
                 else:
                     lines.append(
@@ -281,7 +305,7 @@ class ShiftDebriefMixin:
                     last_auto = auto_events[-1]
                     lines.append(
                         f"    Resident moved without you: {res_name} acted - "
-                        f"{last_auto.content[:80]}"
+                        f"{self._debrief_excerpt(last_auto.content, max_chars=110)}"
                     )
                     # Check severity from bay record
                     sev = bay.autonomous_consequence_severity
@@ -381,7 +405,6 @@ class ShiftDebriefMixin:
         lines.append(f"  Clinical depth: {process_pct:.0f}/100")
 
         resolved_rate_val = resolved_bays / total_bays * 100 if total_bays else 0
-        thin_chart_penalty = thin_chart_dispositions * 4
         warning_bonus = warnings_heeded * 2
         attention_bonus_applied = (
             attention_balanced
@@ -400,7 +423,7 @@ class ShiftDebriefMixin:
         if thin_chart_dispositions > 0:
             lines.append(
                 f"  Thin-chart dispositions: {thin_chart_dispositions} "
-                f"(-{thin_chart_penalty} pts)"
+                f"(half dispo credit — no returned results, <2 reveals, no family)"
             )
 
         # Autonomous fires
@@ -564,20 +587,22 @@ class ShiftDebriefMixin:
                 rs = bay.patient_session.get_reveal_summary()
                 locked = rs.get("locked", [])
                 if locked:
-                    clue = f" Asking about '{locked[0]['trigger_detail'][:60]}' would have surfaced it."
+                    detail = self._debrief_excerpt(locked[0]["trigger_detail"], max_chars=80)
+                    clue = f" Asking about '{detail}' would have surfaced it."
             return (
-                f"The clue: {mt.classic_miss_reason[:100]}.{clue}"
+                f"The clue: {self._debrief_excerpt(mt.classic_miss_reason)}.{clue}"
             )
 
         # Trap caught — positive reinforcement
         if bay.is_trap and is_resolved and dispo_correct:
-            return f"Good catch. {bay.case.narrative_hook[:100]}"
+            return f"Good catch. {self._debrief_excerpt(bay.case.narrative_hook)}"
 
         # Wrong dispo (not a trap) — show what was missed
         if is_resolved and not dispo_correct:
+            key_finding = mt.supporting_findings[0] if mt.supporting_findings else mt.classic_miss_reason
             return (
-                f"Key finding: {mt.supporting_findings[0][:80]}. "
-                f"Correct path: {ot.correct_treatment[:80]}."
+                f"Key finding: {self._debrief_excerpt(key_finding, max_chars=110)} "
+                f"Correct path: {self._debrief_excerpt(ot.correct_treatment, max_chars=120)}"
             )
 
         # Autonomous fired — archetype-specific advice
@@ -591,10 +616,10 @@ class ShiftDebriefMixin:
 
         # Unresolved — flag what's still pending
         if not is_resolved:
-            return f"Still needs: {ot.correct_treatment[:80]}."
+            return f"Still needs: {self._debrief_excerpt(ot.correct_treatment, max_chars=140)}"
 
         # All correct, no drama — just the human story
-        return f"{bay.case.narrative_hook[:100]}"
+        return self._debrief_excerpt(bay.case.narrative_hook)
     def _compute_grade(
         self,
         dispo_pct: float,
@@ -641,7 +666,9 @@ class ShiftDebriefMixin:
         score -= warned_consequences * 5.0
         score -= unwarned_consequences * 3.0
         score -= autonomous_fires * 2.0
-        score -= thin_chart_dispositions * 4.0
+        # Thin-chart penalty lives in dispo_pct now (half credit per bay), so
+        # no additional subtraction here. The thin_chart_dispositions counter
+        # is still used to gate the clean-sheet bonus below.
 
         if attention_balanced and autonomous_fires == 0 and process_score >= 60:
             score += 5

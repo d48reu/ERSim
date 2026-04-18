@@ -14,7 +14,7 @@ class ShiftTestsMixin:
     # Known clinical test keywords — any test name must contain at least one
     _KNOWN_TEST_WORDS = {
         "ekg", "ecg", "cxr", "xray", "x-ray", "ct", "mri", "echo", "ultrasound",
-        "glucose", "fingerstick", "bmp", "cbc", "troponin", "lactate", "d-dimer",
+        "glucose", "fingerstick", "bmp", "cmp", "cbc", "troponin", "lactate", "d-dimer",
         "ddimer", "bnp", "procalcitonin", "urinalysis", "ua", "urine", "culture",
         "blood", "flu", "strep", "monospot", "hiv", "hcg", "pregnancy", "coag",
         "inr", "pt", "ptt", "liver", "lfts", "lipase", "tsh", "thyroid", "crp",
@@ -56,23 +56,54 @@ class ShiftTestsMixin:
         "complete blood count": "cbc",
         "complete blood count with differential": "cbc",
         "cbc with differential": "cbc",
+        "cbc w/ diff": "cbc",
+        "cbc w diff": "cbc",
         "basic metabolic panel": "bmp",
         "comprehensive metabolic panel": "bmp",
+        # Short-form aliases — residents routinely dump these in plan_tests
+        "cmp": "bmp",
+        "bmp/cmp": "bmp",
+        "chem 7": "bmp",
+        "chem-7": "bmp",
+        "chem10": "bmp",
+        "chem 10": "bmp",
+        "electrolytes": "bmp",
         "chest x-ray": "chest x",
         "chest xray": "chest x",
         "chest radiograph": "chest x",
         "portable chest x-ray": "chest x",
+        "cxr": "chest x",
+        "pa/lat cxr": "chest x",
         "arterial blood gas": "abg",
         "venous blood gas": "vbg",
         "arterial or venous blood gas": "abg",
         "free t4": "tsh",
         "free thyroxine": "tsh",
         "thyroid function tests": "tsh",
+        "tfts": "tsh",
+        "tft": "tsh",
         "d-dimer": "d-dimer",
         "d dimer": "d-dimer",
+        "ddimer": "d-dimer",
         "urine drug screen": "urine",
         "urine drug screening": "urine",
+        "uds": "urine",
+        "tox screen": "tox",
         "toxicology screen": "tox",
+        "utox": "tox",
+        "urinalysis": "ua",
+        "urinalysis with culture": "ua",
+        "ua with culture": "ua",
+        "u/a": "ua",
+        "lipase/amylase": "lipase",
+        "coags": "coag",
+        "pt/inr": "inr",
+        "pt/ptt": "ptt",
+        "pt/ptt/inr": "inr",
+        "hs troponin": "troponin",
+        "hs-troponin": "troponin",
+        "high-sensitivity troponin": "troponin",
+        "high sensitivity troponin": "troponin",
     }
 
     def _normalize_test_name(self, test_name: str) -> str:
@@ -127,8 +158,9 @@ class ShiftTestsMixin:
         generic words, and anything under 3 chars.
         """
         name = test_name.strip()
+        # Allow 2-char names that are recognized short-form tests (ua, pt, ct).
         if len(name) <= 2:
-            return False
+            return name.lower() in self._KNOWN_TEST_WORDS
         # Reject pure demographic patterns: number + letter (34F, 16M, 71M)
         import re
         if re.match(r'^\d+[MmFf]$', name):
@@ -143,14 +175,34 @@ class ShiftTestsMixin:
         name_lower = name.lower()
         return any(kw in name_lower for kw in self._KNOWN_TEST_WORDS)
 
+    _HEADER_PATTERN = re.compile(
+        r"^[*_#`\s]*(impression|result|findings?|conclusion|interpretation|report|summary)[:\s*]*$",
+        re.IGNORECASE,
+    )
+
+    @classmethod
+    def _is_header_line(cls, line: str) -> bool:
+        """True when a line is a section header with no substantive body.
+
+        Examples: '**IMPRESSION:**', 'Findings:', 'REPORT' all return True;
+        'Impression: normal sinus rhythm' returns False.
+        """
+        stripped = line.strip()
+        if cls._HEADER_PATTERN.match(stripped):
+            return True
+        # Markdown-heavy lines with barely any alphanumeric content
+        alnum = sum(1 for ch in stripped if ch.isalnum())
+        return alnum < 4
+
     def _summarize_result(self, test_name: str, full_result: str) -> str:
         """
         Return a short 1-2 sentence summary of a test result.
         Full result is stored for chart view.
         """
-        # Extract the most informative line — look for impression/result/finding
         lines = [l.strip() for l in full_result.split('\n') if l.strip()]
-        # Priority: lines containing key summary words
+        # Drop pure section headers — they're not summaries.
+        content_lines = [l for l in lines if not self._is_header_line(l)]
+
         priority_words = [
             "impression", "result", "finding", "conclusion",
             "interpretation", "positive", "negative", "normal",
@@ -158,41 +210,79 @@ class ShiftTestsMixin:
             "no acute", "within normal",
         ]
         for word in priority_words:
-            for line in lines:
+            for line in content_lines:
                 if word in line.lower() and len(line) > 10:
-                    # Cap at 120 chars
                     return line[:120]
-        # Fallback: first substantive line
-        for line in lines:
+        # Fallback: first substantive non-header line
+        for line in content_lines:
             if len(line) > 15:
                 return line[:120]
-        return full_result[:120]
+        # Last resort: the test ran but came back with no parseable content.
+        return f"{test_name.upper()} — open the chart for the full report"
+
+    # Negation windows: if any of these appear within ~40 chars BEFORE an
+    # urgent keyword, the finding is being ruled out, not in.
+    _NEGATION_MARKERS = (
+        "no acute", "no evidence", "negative for", "without",
+        "unremarkable", "within normal", "normal limits",
+        "rule out", "ruled out", "not seen", "not present",
+        "no sign", "no obvious", "no concerning", "benign",
+        "normal ", " no ",
+    )
+
+    @classmethod
+    def _is_negated(cls, text: str, keyword: str) -> bool:
+        """
+        Return True if the keyword is preceded by a negation marker within
+        ~40 characters. Lets us distinguish "ischemic changes" from
+        "no acute ischemic changes".
+        """
+        idx = text.find(keyword)
+        if idx == -1:
+            return False
+        window = text[max(0, idx - 40):idx]
+        return any(marker in window for marker in cls._NEGATION_MARKERS)
+
+    def _has_unnegated(self, text: str, keywords: tuple) -> bool:
+        return any(
+            kw in text and not self._is_negated(text, kw)
+            for kw in keywords
+        )
 
     def _suggest_next_step(self, bay, test_name: str, full_result: str) -> str:
         """Return a short actionable nudge based on obvious result keywords."""
         text = f"{test_name} {full_result}".lower()
         demo_nudge = get_demo_case_meta(bay.case.case_id).get("result_nudge")
 
+        # If the result body is empty/placeholder, do not make claims about it.
+        stripped = full_result.strip()
+        if len(stripped) < 25 or stripped.lower() in {"impression:", "**impression:**", "pending", "pending - results to follow"}:
+            return "Open the chart for the full report — summary was not available."
+
         if (
             bay.case.case_id == "SHIFT_20260317_0118_02"
-            and any(word in text for word in ("fracture", "intertrochanteric", "femoral neck"))
+            and self._has_unnegated(text, ("fracture", "intertrochanteric", "femoral neck"))
         ):
             return "This is your clean close: admit, call orthopedics, and move on."
-        if demo_nudge and any(word in text for word in ("withdrawal", "alcohol", "pe", "embol", "fracture", "hypoxia")):
+        if demo_nudge and self._has_unnegated(text, ("withdrawal", "alcohol", "pe", "embol", "fracture", "hypoxia")):
             return demo_nudge
-        if any(word in text for word in ("st elevation", "nstemi", "ischemia", "troponin")):
+        if self._has_unnegated(text, ("st elevation", "nstemi", "stemi", "ischemia", "ischemic")):
             return "Consider immediate cardiac escalation or treatment."
-        if any(word in text for word in ("fracture", "intertrochanteric", "femoral neck")):
+        # Troponin elevation (not just troponin ordered): require a number or "elevated"
+        if ("troponin" in text and self._has_unnegated(text, ("elevated", "high", "above", "positive"))):
+            return "Consider immediate cardiac escalation or treatment."
+        if self._has_unnegated(text, ("fracture", "intertrochanteric", "femoral neck")):
             return "Likely needs admission and specialty consultation."
-        if any(word in text for word in ("alcohol withdrawal", "withdrawal", "ciwa")):
+        if self._has_unnegated(text, ("alcohol withdrawal", "withdrawal", "ciwa")):
             return "Reassess withdrawal severity and consider monitored admission."
-        if any(word in text for word in ("normal", "no acute", "negative")):
-            return "If the bedside picture also fits, you may be closer to discharge."
-        if any(word in text for word in ("sepsis", "lactate", "infection", "influenza")):
+        if self._has_unnegated(text, ("intracranial hemorrhage", "subarachnoid", "subdural", "epidural hematoma", "mass effect", "midline shift")):
+            return "Match this against neuro exam and escalate — neurosurgery input may be needed."
+        if self._has_unnegated(text, ("sepsis", "septic shock")) or ("lactate" in text and self._has_unnegated(text, ("elevated", "high"))):
             return "Reassess for sepsis, fluids, and admission need."
-        if any(word in text for word in ("head ct", "intracranial", "bleed")):
-            return "Match this against neuro exam and mechanism before dispo."
-        return "Use 'chart' if you need the full report before deciding."
+        # Only when nothing concerning is found do we say "closer to discharge".
+        if any(word in text for word in ("normal", "no acute", "negative", "unremarkable", "within normal")):
+            return "Reassuring result — if the bedside picture also fits, you may be closer to discharge."
+        return "Open the chart for the full report before deciding."
 
     def _get_test_delay(self, test_name: str) -> int:
         """Return turn delay for a test. Matches on substring of test name."""
@@ -222,6 +312,7 @@ class ShiftTestsMixin:
 
         self._tick_others(self.active_bay_id)
         self.global_turn += 1
+        bay.note_attending_intervention(f"ordered test: {test_name}")
 
         _, message = self._queue_test_result(bay, test_name, actor="attending")
         return message
@@ -263,6 +354,9 @@ class ShiftTestsMixin:
         # Tick once for the whole bundle — it's one attending action
         self._tick_others(self.active_bay_id)
         self.global_turn += 1
+        bay.note_attending_intervention(
+            f"ordered test bundle: {', '.join(test_names[:4])}"
+        )
 
         output = []
         skipped = []

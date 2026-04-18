@@ -42,7 +42,6 @@ class ShiftResolveMixin:
         summary = bay.patient_session.get_reveal_summary()
         completed_results = len(getattr(bay, '_test_results', {}))
         revealed_count = len(summary.get("revealed", []))
-        engagement_turns = summary.get("turns", 0)
         family_present = summary.get("family_present", False)
         attending_actions = sum(
             1 for event in bay.events
@@ -60,9 +59,15 @@ class ShiftResolveMixin:
         bay.disposition = disposition
         bay.resolution_note = note
         bay.record("attending", "resolve", f"{disposition}: {note}")
-        bay.low_evidence_disposition = (
-            completed_results == 0 and revealed_count <= 1 and not family_present and engagement_turns < 4
+        # Thin-chart gate: at least one concrete signal is required before a
+        # dispo reads as well-supported. Turn count alone does not count —
+        # a player can talk for many turns without unlocking anything.
+        has_signal = (
+            completed_results >= 1
+            or revealed_count >= 2
+            or family_present
         )
+        bay.low_evidence_disposition = not has_signal
 
         # Compare to correct disposition — normalize both sides
         correct = bay.case.outcome_trajectory.disposition
